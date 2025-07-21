@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException,Depends
+from fastapi import APIRouter, HTTPException,Depends, status
 from sqlalchemy.orm import Session
 from .models import User
 from .schema import UserCreate,TokenResponse,UserResponse,UserLogin
@@ -9,7 +9,7 @@ import uuid
 
 router = APIRouter()
 
-@router.post("/register", response_model= TokenResponse)
+@router.post("/register", response_model= TokenResponse, status_code=status.HTTP_201_CREATED)
 async def register(user_data: UserCreate, db: Session = Depends(get_db_session)):
 
     # check if email already exits
@@ -18,7 +18,7 @@ async def register(user_data: UserCreate, db: Session = Depends(get_db_session))
         raise HTTPException(status_code=400,detail="Email already registered")
     
     # check if username already exits
-    existing_username = db.query(User).filter(User.email ==user_data.email).first()
+    existing_username = db.query(User).filter(User.username ==user_data.username).first()
     if existing_username:
         raise HTTPException(status_code=400,detail="Username already exits")
     
@@ -49,7 +49,7 @@ async def login(user_data: UserLogin, db : Session = Depends(get_db_session)):
     # Find user
     user = db.query(User).filter(User.email == user_data.email).first()
 
-    if not user or not verify_password(user.hashed_password,user_data.password):
+    if not user or not verify_password(user_data.password, user.hashed_password):
         raise HTTPException(status_code=401,detail="Invalid credentials")
     
     access_token = create_token(data={"sub":user.email})

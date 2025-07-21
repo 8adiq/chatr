@@ -1,5 +1,5 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.orm import sessionmaker, declarative_base, Session
 import os
 from dotenv import load_dotenv
 
@@ -7,7 +7,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # db setup
-DATABASE_URL = os.getenv("DATABASE_URL","sqlite:///./users.db")
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL environment variable is not set.")
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread":False})
 session = sessionmaker(autoflush=False,autocommit=False,bind=engine)
 
@@ -15,7 +17,7 @@ Base = declarative_base()
 
 def get_db_session():
     """ creating a dependency for db session """
-    db = session
+    db : Session = session() 
     try:
         yield db
     finally:
@@ -30,5 +32,5 @@ def init_db():
         Base.metadata.create_all(bind=engine)
         print("Database created")
     else:
-        print(f"Database table already exits")
+        print(f"Database table already exists")
 

@@ -21,7 +21,7 @@ def test_registration():
     
     response = requests.post(f"{API_BASE}/register", json=data)
     print(f"Status: {response.status_code}")
-    print(f"Response: {json.dumps(response.json(), indent=2)}")
+    print("Raw response text", response.text)
     
     if response.status_code == 201:
         print("✅ Registration successful!")

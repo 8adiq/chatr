@@ -1,4 +1,3 @@
-from passlib.context import CryptContext
 from datetime import datetime,timedelta
 from jose import jwt, JWTError
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -8,24 +7,28 @@ from dotenv import load_dotenv
 from .models import User
 from .database import get_db_session
 import os
+import bcrypt
 
 load_dotenv()
 
 SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    raise RuntimeError("SECRET_KEY environment variable is not set.")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRES_MINUTES = 30
 
 
-pwd_context = CryptContext(schemes=["bcrypt"],deprecated="auto")
 security = HTTPBearer()
 
 def hash_password(password: str) -> str:
     """hash password"""
-    return pwd_context.hash(password)
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(password.encode("utf-8"), salt)
+    return hashed.decode("utf-8")
 
-def verify_password(password: str,hashed_password: str) -> bool:
+def verify_password(password: str, hashed_password: str) -> bool:
     """verify password against hashed password"""
-    return pwd_context.verify(password,hashed_password)
+    return bcrypt.checkpw(password.encode("utf-8"), hashed_password.encode("utf-8"))
 
 def create_token(data:dict):
     """generates jwt token"""
