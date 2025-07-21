@@ -2,9 +2,11 @@ from passlib.context import CryptContext
 from datetime import datetime,timedelta
 from jose import jwt, JWTError
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from fastapi import HTTPException, Depends, status
+from fastapi import HTTPException, Depends
+from sqlalchemy.orm import Session
 from dotenv import load_dotenv
 from .models import User
+from .database import get_db_session
 import os
 
 load_dotenv()
@@ -18,9 +20,11 @@ pwd_context = CryptContext(schemes=["bcrypt"],deprecated="auto")
 security = HTTPBearer()
 
 def hash_password(password: str) -> str:
+    """hash password"""
     return pwd_context.hash(password)
 
 def verify_password(password: str,hashed_password: str) -> bool:
+    """verify password against hashed password"""
     return pwd_context.verify(password,hashed_password)
 
 def create_token(data:dict):
@@ -34,7 +38,9 @@ def create_token(data:dict):
 
     return encoded_jwt
 
-def show_user_details(credentials: HTTPAuthorizationCredentials = Depends(security)):
+def get_user_details(credentials: HTTPAuthorizationCredentials = Depends(security),
+                      db: Session = Depends(get_db_session)):
+    """get authenticated user"""
     try:
         payload = jwt.decode(credentials.credentials, SECRET_KEY, algorithms=[ALGORITHM])
         email = payload.get('sub')
@@ -44,16 +50,9 @@ def show_user_details(credentials: HTTPAuthorizationCredentials = Depends(securi
     except JWTError:
         raise HTTPException(status_code=401, detail='Invalid Token')
     
-    # go the DB and get the user
+    user = db.query(User).filter(User.email == email).first()
 
-# def decode_token(token: str,credential_exception):
-#     """decodes and verifies jwt token"""
-#     try:
-#         payload = jwt.decode(token,SECRET_KEY,algorithms=[ALGORITHM])
-#         user_id = payload.get(user_id)
-
-#         if user_id is None:
-#             raise credential_exception
-#         return payload
-#     except JWTError:
-#         return None
+    if user is None:
+        raise HTTPException(status_code=401,detail="User not found")
+    return user 
+    

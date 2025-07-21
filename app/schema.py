@@ -2,13 +2,18 @@ from pydantic import BaseModel, EmailStr
 
 class UserBase(BaseModel):
     username : str
-    email : EmailStr
+    email : str
 
 class UserCreate(UserBase):
+    password : str
+
+class UserLogin(BaseModel):
+    email : str
     password : str
 
 class UserResponse(UserBase):
     id : int
 
-    class config:
-        orm_mode = True
+class TokenResponse(BaseModel):
+    user : UserBase
+    token : str
