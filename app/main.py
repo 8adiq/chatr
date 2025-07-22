@@ -1,10 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 import os
 from .routes import router
 from .database import init_db
 
 app = FastAPI(title="Authentication API")
+
+app.mount("/", StaticFiles(directory="frontend/dist", html=True), name="static")
 
 allowed_origins = os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:5173").split(",")
 
