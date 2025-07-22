@@ -1,6 +1,6 @@
 // API utility for authentication
 // const API_BASE = 'http://localhost:8000/api';
-const API_BASE = 'https://basic-user.onrender.com/api';
+const API_BASE = '/api';
 
 export async function register({ username, email, password }) {
   const res = await fetch(`${API_BASE}/register`, {
