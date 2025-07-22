@@ -25,10 +25,6 @@ async def startup():
     """ initializing database on startup"""
     init_db()
 
-@app.get("/")
-async def root():
-    return {"message": "Authentication API is running"}
-
 app.mount("/", StaticFiles(directory="auth-app-frontend/dist", html=True), name="static")
 
 if __name__ == "__main__":
