@@ -15,5 +15,5 @@ class UserResponse(UserBase):
     id : str
 
 class TokenResponse(BaseModel):
-    user : UserBase
+    user : UserResponse
     token : str
