@@ -7,7 +7,7 @@ from .database import init_db
 
 app = FastAPI(title="Authentication API")
 
-app.mount("/", StaticFiles(directory="frontend/dist", html=True), name="static")
+app.mount("/", StaticFiles(directory="auth-app-frontend/dist", html=True), name="static")
 
 allowed_origins = os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:5173").split(",")
 
