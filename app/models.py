@@ -1,5 +1,6 @@
-from sqlalchemy import Column, Integer, String,ForeignKey
+from sqlalchemy import Column, Integer, String,ForeignKey,DateTime
 from sqlalchemy.orm import relationship
+from datetime import datetime
 from app.database import Base
 
 class User(Base):
@@ -24,6 +25,7 @@ class Post(Base):
     id  = Column(String,unique=True,index=True,nullable=False,primary_key=True)
     text = Column(String,nullable=True)
     user_id = Column(String,ForeignKey("Users.id"),nullable=False)
+    created_at = Column(datetime,default=datetime.utcnow())
 
     user = relationship("User",backref="posts")
 
@@ -32,7 +34,8 @@ class Post(Base):
         return {
             "id":self.id,
             "text": self.text,
-            "user_id":self.user_id
+            "user_id":self.user_id,
+            "created_at":self.created_at.isoformat()
         }
     def __repr__(self):
         return f"<User(id={self.id}, text={self.text},user_id={self.user_id})>"
@@ -43,6 +46,7 @@ class Comment(Base):
     text = Column(String,nullable=True)
     user_id = Column(String,ForeignKey("Users.id"),nullable=False)
     post_id = Column(String,ForeignKey("Posts.id"),nullable=False)
+    created_at = Column(datetime,default=datetime.utcnow())
 
     user = relationship("User",backref="comments")
     post = relationship("Post",backref="comments")
@@ -53,7 +57,8 @@ class Comment(Base):
             "id":self.id,
             "text": self.text,
             "user_id":self.user_id,
-            "post_id":self.post_id
+            "post_id":self.post_id,
+            "created_at":self.created_at.isoformat()
         }
     def __repr__(self):
         return f"<User(id={self.id}, text={self.text},user_id={self.user_id}, post_id={self.post_id})>"
