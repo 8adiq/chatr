@@ -1,76 +1,80 @@
-from sqlalchemy import Column, Integer, String,ForeignKey,DateTime
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, UniqueConstraint
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from sqlalchemy.sql import func
 from app.database import Base
 
 class User(Base):
     __tablename__ = 'Users'
-    id = Column(String,primary_key=True,index=True)
-    username = Column(String,unique=True,index=True,nullable=False)
-    email = Column(String,unique=True,nullable=False,index=True)
-    hashed_password = Column(String,nullable=False)
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String(50), unique=True, index=True, nullable=False)
+    email = Column(String(100), unique=True, nullable=False, index=True)
+    hashed_password = Column(String(255), nullable=False)
 
     def to_dict(self):
         """ converting user object to a dictionary"""
         return {
-            "id":self.id,
-            "username":self.username,
-            "email":self.email,
+            "id": self.id,
+            "username": self.username,
+            "email": self.email,
         }
+    
     def __repr__(self):
         return f"<User(id={self.id}, username={self.username}, email={self.email})>"
     
 class Post(Base):
     __tablename__ = 'Posts'
-    id  = Column(String,unique=True,index=True,nullable=False,primary_key=True)
-    text = Column(String,nullable=True)
-    user_id = Column(String,ForeignKey("Users.id"),nullable=False)
-    created_at = Column(datetime,default=datetime.utcnow())
+    id = Column(Integer, primary_key=True, index=True)
+    text = Column(String(1000), nullable=True)
+    user_id = Column(Integer, ForeignKey("Users.id"), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    user = relationship("User",backref="posts")
+    user = relationship("User", backref="posts")
 
     def to_dict(self):
-
         return {
-            "id":self.id,
+            "id": self.id,
             "text": self.text,
-            "user_id":self.user_id,
-            "created_at":self.created_at.isoformat()
+            "user_id": self.user_id,
+            "created_at": self.created_at.isoformat()
         }
+    
     def __repr__(self):
-        return f"<User(id={self.id}, text={self.text},user_id={self.user_id})>"
+        return f"<Post(id={self.id}, text={self.text}, user_id={self.user_id})>"
     
 class Comment(Base):
     __tablename__ = "Comments"
-    id = Column(String,unique=True,nullable=False,primary_key=True,index=True)
-    text = Column(String,nullable=True)
-    user_id = Column(String,ForeignKey("Users.id"),nullable=False)
-    post_id = Column(String,ForeignKey("Posts.id"),nullable=False)
-    created_at = Column(datetime,default=datetime.utcnow())
+    id = Column(Integer, primary_key=True, index=True)
+    text = Column(String(500), nullable=True)
+    user_id = Column(Integer, ForeignKey("Users.id"), nullable=False)
+    post_id = Column(Integer, ForeignKey("Posts.id"), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    user = relationship("User",backref="comments")
-    post = relationship("Post",backref="comments")
+    user = relationship("User", backref="comments")
+    post = relationship("Post", backref="comments")
 
     def to_dict(self):
-
         return {
-            "id":self.id,
+            "id": self.id,
             "text": self.text,
-            "user_id":self.user_id,
-            "post_id":self.post_id,
-            "created_at":self.created_at.isoformat()
+            "user_id": self.user_id,
+            "post_id": self.post_id,
+            "created_at": self.created_at.isoformat()
         }
+    
     def __repr__(self):
-        return f"<User(id={self.id}, text={self.text},user_id={self.user_id}, post_id={self.post_id})>"
+        return f"<Comment(id={self.id}, text={self.text}, user_id={self.user_id}, post_id={self.post_id})>"
 
 class Like(Base):
     __tablename__ = "Likes"
-    id = Column(String,unique=True,nullable=False,index=True,primary_key=True)
-    user_id = Column(String,ForeignKey("Users.id"),nullable=False)
-    post_id = Column(String,ForeignKey("Posts.id"),nullable=False)
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("Users.id"), nullable=False)
+    post_id = Column(Integer, ForeignKey("Posts.id"), nullable=False)
 
-    user = relationship("User",backref="likes")
-    post = relationship("Post",backref="likes")
+    user = relationship("User", backref="likes")
+    post = relationship("Post", backref="likes")
+    
+    # Prevent duplicate likes
+    __table_args__ = (UniqueConstraint('user_id', 'post_id', name='unique_user_post_like'),)
 
 
 
