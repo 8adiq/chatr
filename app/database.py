@@ -28,7 +28,7 @@ def init_db():
     from sqlalchemy import inspect
 
     inspector = inspect(engine)
-    if not inspector.has_table("users"):
+    if not inspector.has_table("Users"):
         Base.metadata.create_all(bind=engine)
         print("Database created")
     else:

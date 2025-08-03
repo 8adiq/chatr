@@ -4,7 +4,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi import HTTPException, Depends
 from sqlalchemy.orm import Session
 from dotenv import load_dotenv
-from .models import User
+from .models import User,Post
 from .database import get_db_session
 import os
 import bcrypt
@@ -57,5 +57,8 @@ def get_user_details(credentials: HTTPAuthorizationCredentials = Depends(securit
 
     if user is None:
         raise HTTPException(status_code=401,detail="User not found")
-    return user 
+    return user
+
+
+
     

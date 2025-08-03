@@ -14,7 +14,7 @@ class UserLogin(BaseModel):
     password: str
 
 class UserResponse(UserBase):
-    id: int
+    id: str
     
     class Config:
         orm_mode = True
@@ -28,11 +28,11 @@ class PostBase(BaseModel):
     text: str
 
 class PostCreate(PostBase):
-    user_id: int
+    pass
 
 class PostPublic(PostBase):
-    id: int
-    user_id: int
+    id: str
+    user_id: str
     created_at: datetime
 
     class Config:
@@ -43,13 +43,13 @@ class CommentBase(BaseModel):
     text: str
 
 class CommentCreate(CommentBase):
-    user_id: int
-    post_id: int
+    user_id: str
+    post_id: str
 
 class CommentPublic(CommentBase):
-    id: int
-    user_id: int
-    post_id: int
+    id: str
+    user_id: str
+    post_id: str
     created_at: datetime
 
     class Config:
@@ -57,14 +57,14 @@ class CommentPublic(CommentBase):
 
 # Likes schema
 class LikeBase(BaseModel):
-    user_id: int
-    post_id: int
+    user_id: str
+    post_id: str
 
 class LikeCreate(LikeBase):
     pass
 
 class LikeResponse(LikeBase):
-    id: int
+    id: str
     
     class Config:
         orm_mode = True

@@ -1,11 +1,12 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, UniqueConstraint
+from sqlalchemy import Column, String, ForeignKey, DateTime, UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
+import uuid
 from app.database import Base
 
 class User(Base):
     __tablename__ = 'Users'
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()), index=True)
     username = Column(String(50), unique=True, index=True, nullable=False)
     email = Column(String(100), unique=True, nullable=False, index=True)
     hashed_password = Column(String(255), nullable=False)
@@ -23,9 +24,9 @@ class User(Base):
     
 class Post(Base):
     __tablename__ = 'Posts'
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()), index=True)
     text = Column(String(1000), nullable=True)
-    user_id = Column(Integer, ForeignKey("Users.id"), nullable=False)
+    user_id = Column(String(36), ForeignKey("Users.id"), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     user = relationship("User", backref="posts")
@@ -43,10 +44,10 @@ class Post(Base):
     
 class Comment(Base):
     __tablename__ = "Comments"
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()), index=True)
     text = Column(String(500), nullable=True)
-    user_id = Column(Integer, ForeignKey("Users.id"), nullable=False)
-    post_id = Column(Integer, ForeignKey("Posts.id"), nullable=False)
+    user_id = Column(String(36), ForeignKey("Users.id"), nullable=False)
+    post_id = Column(String(36), ForeignKey("Posts.id"), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     user = relationship("User", backref="comments")
@@ -66,9 +67,9 @@ class Comment(Base):
 
 class Like(Base):
     __tablename__ = "Likes"
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("Users.id"), nullable=False)
-    post_id = Column(Integer, ForeignKey("Posts.id"), nullable=False)
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()), index=True)
+    user_id = Column(String(36), ForeignKey("Users.id"), nullable=False)
+    post_id = Column(String(36), ForeignKey("Posts.id"), nullable=False)
 
     user = relationship("User", backref="likes")
     post = relationship("Post", backref="likes")
