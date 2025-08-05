@@ -7,7 +7,7 @@ This will delete all data!
 import sqlite3
 import os
 from app.database import engine, Base
-from app.models import User, Post, Comment, Like, EmailVerificationToken
+from app.models import User, Post, Comment, Like
 
 def reset_database():
     """Drop all tables and recreate them"""

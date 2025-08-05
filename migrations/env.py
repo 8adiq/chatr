@@ -28,7 +28,7 @@ load_dotenv()
 
 # Import your models and Base
 from app.database import Base
-from app.models import User, Post, Comment, Like, EmailVerificationToken
+from app.models import User, Post, Comment, Like
 
 target_metadata = Base.metadata
 
