@@ -1,10 +1,11 @@
 from fastapi import APIRouter, HTTPException,Depends, status
 from sqlalchemy.orm import Session
 from typing import List
-from .models import User,Post,Comment,Like
-from .schema import UserCreate,TokenResponse,UserResponse,UserLogin,PostPublic,PostCreate,PostBase,CommentBase,CommentCreate,CommentPublic,LikeResponse,LikeCreate
-from .auth import hash_password,verify_password,get_user_details,create_token
+from .models import User,Post,Comment,Like,EmailVerificationToken
+from .schema import UserCreate,TokenResponse,UserResponse,UserLogin,PostPublic,PostCreate,PostBase,CommentBase,CommentCreate,CommentPublic,LikeResponse,LikeCreate,EmailVerification
+from .auth import get_user_details,create_token
 from .database import get_db_session
+from .service import EmailVerification as EmailVerificationService, UserService, PostService, CommentService, LikeService
 
 
 router = APIRouter()
@@ -13,30 +14,25 @@ router = APIRouter()
 @router.post("/register", response_model= TokenResponse, status_code=status.HTTP_201_CREATED)
 async def register(user_data: UserCreate, db: Session = Depends(get_db_session)):
 
-    # check if email already exits
-    existing_email = db.query(User).filter(User.email ==user_data.email).first()
-    if existing_email:
-        raise HTTPException(status_code=400,detail="Email already registered")
+    user_service = UserService(db)
+    email_service = EmailVerificationService()
     
-    # check if username already exits
-    existing_username = db.query(User).filter(User.username ==user_data.username).first()
-    if existing_username:
-        raise HTTPException(status_code=400,detail="Username already exits")
+    # Create user with validation
+    db_user = user_service.create_user(user_data)
     
-    # validate password length
-    if len(user_data.password) < 6:
-        raise HTTPException(status_code=400,detail="Password has to be at least 6 characters")
+    # Create verification token
+    verification_token = user_service.create_verification_token(db_user.id)
     
-    hashed_password = hash_password(user_data.password) 
-    db_user = User(
-        username = user_data.username,
-        email = user_data.email,
-        hashed_password = hashed_password
+    # Send verification email
+    email_sent = await email_service.send_verification_email(
+        username=db_user.username,
+        user_email=db_user.email,
+        token=verification_token
     )
-    db.add(db_user)
-    db.commit()
+    if not email_sent:
+        raise HTTPException(status_code=500, detail="Failed to send verification email.")
 
-    access_token = create_token(data={"sub":db_user.email})
+    access_token = create_token(data={"sub": db_user.email})
     return {
         "user": UserResponse(**db_user.to_dict()),
         "token": access_token
@@ -45,22 +41,49 @@ async def register(user_data: UserCreate, db: Session = Depends(get_db_session))
 @router.post("/login",response_model=TokenResponse)
 async def login(user_data: UserLogin, db : Session = Depends(get_db_session)):
 
-    # Find user
-    user = db.query(User).filter(User.email == user_data.email).first()
-
-    if not user or not verify_password(user_data.password, user.hashed_password):
-        raise HTTPException(status_code=401,detail="Invalid credentials")
+    user_service = UserService(db)
+    user = user_service.authenticate_user(user_data)
     
-    access_token = create_token(data={"sub":user.email})
+    access_token = create_token(data={"sub": user.email})
 
     return{
         "user": UserResponse(**user.to_dict()),
         "token": access_token
     }
 
+@router.post("/email-verification/request")
+async def email_verification_request(request: EmailVerification, db:Session=Depends(get_db_session)):
+
+    user_service = UserService(db)
+    email_service = EmailVerificationService()
+    
+    user = user_service.get_user_by_email(request.email)
+
+    if not user:
+        return {"message: Email already exists, Verification link sent"}
+    
+    if user.email_varified:
+        raise HTTPException(status_code=400, detail="Email already verified")
+    
+    # Delete existing verification tokens
+    user_service.delete_existing_verification_tokens(user.id)
+
+    # Create new verification token
+    verification_token = user_service.create_verification_token(user.id)
+
+    # Send verification email
+    email_sent = await email_service.send_verification_email(
+        username=user.username,
+        user_email=user.email,
+        token=verification_token
+    )
+
+    if not email_sent:
+        raise HTTPException(status_code=500, detail="Failed to send verification email.")
+
 @router.get("/profile")
 async def show_profile(current_user : User = Depends(get_user_details)):
-    return {"user":UserResponse(**current_user.to_dict())}
+    return {"user": UserResponse(**current_user.to_dict())}
 
 
 # Post Routes
@@ -68,80 +91,57 @@ async def show_profile(current_user : User = Depends(get_user_details)):
 async def create_post(post_data : PostCreate, db : Session = Depends(get_db_session),
                       current_user: User = Depends(get_user_details)):
     
-    if not post_data.text.strip():
-        raise HTTPException(status_code=400,detail="Posts cannot be empty")
-    
-    db_post = Post(
-        text = post_data.text,
-        user_id = current_user.id
-    )
-
-    db.add(db_post)
-    db.commit()
-    db.refresh(db_post)
-
+    post_service = PostService(db)
+    db_post = post_service.create_post(post_data, current_user.id)
     return PostPublic(**db_post.to_dict())
 
 @router.get("/posts",response_model = List[PostPublic])
 async def get_all_posts(skip : int = 0, limit : int = 50, 
                         db : Session = Depends(get_db_session)):
 
-    posts = db.query(Post).offset(skip).limit(limit).all()
-    return  [PostPublic(**post.to_dict()) for post in posts]
+    post_service = PostService(db)
+    posts = post_service.get_all_posts(skip, limit)
+    return [PostPublic(**post.to_dict()) for post in posts]
 
 
 @router.get("/posts/{post_id}",response_model=PostPublic)
 async def get_post(post_id : str ,db : Session = Depends(get_db_session)):
 
-    post = db.query(Post).filter(Post.id == post_id).order_by(Post.created_at.desc()).first()
+    post_service = PostService(db)
+    post = post_service.get_post_by_id(post_id)
 
     if not post:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Post not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
     return PostPublic(**post.to_dict())
 
 @router.get("/{user_id}/posts",response_model=List[PostPublic])
 async def get_user_post(user_id : str ,skip :int = 0, limit :  int =10,
                         db: Session = Depends(get_db_session)):
-    user = db.query(User).filter(User.id == user_id).first()
-
+    
+    user_service = UserService(db)
+    post_service = PostService(db)
+    
+    user = user_service.get_user_by_id(user_id)
     if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="User not Found.")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not Found.")
 
-    posts = db.query(Post).filter(Post.user_id == user_id).order_by(Post.created_at.desc()).offset(skip).limit(limit).all()
+    posts = post_service.get_user_posts(user_id, skip, limit)
     return [PostPublic(**post.to_dict()) for post in posts]
 
 @router.put("/posts/{post_id}",response_model=PostPublic)
 async def update_post(post_data : PostBase , post_id : str , db : Session = Depends(get_db_session),
                       current_user : User = Depends(get_user_details)):
 
-    post = db.query(Post).filter(Post.id == post_id).first()
-    if not post:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Post not found.")
-
-    if post.user_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,detail="You can only update your own post.")
-    
-
-    post.text = post_data.text
-    db.commit()
-    db.refresh(post)
-
+    post_service = PostService(db)
+    post = post_service.update_post(post_id, post_data, current_user.id)
     return PostPublic(**post.to_dict())
 
 @router.delete("/posts/{post_id}",status_code=status.HTTP_204_NO_CONTENT)
 async def delete_post(post_id : str, db  : Session = Depends(get_db_session),
                       current_user : User = Depends(get_user_details)):
 
-    post = db.query(Post).filter(Post.id == post_id).first()
-
-    if not post:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Post not found.")
-
-    if post.user_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,detail="You can only delete your own post.")
-
-    db.delete(post)
-    db.commit()
+    post_service = PostService(db)
+    post_service.delete_post(post_id, current_user.id)
     return None
 
 
@@ -151,37 +151,17 @@ async def delete_post(post_id : str, db  : Session = Depends(get_db_session),
 async def create_comment(post_id : str ,comment_data : 
                          CommentBase, db : Session = Depends(get_db_session),
                          current_user : User = Depends(get_user_details)):
-    post = db.query(Post).filter(Post.id == post_id).first()
-
-    if not post:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="No Post found.")
-
-    if not comment_data.text.strip():
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="Comment cannot be empty")
     
-    db_com = Comment(
-        text = comment_data.text,
-        user_id = current_user.id,
-        post_id = post_id
-    )
-
-    db.add(db_com)
-    db.commit()
-    db.refresh(db_com)
-
-    return CommentPublic(**db_com.to_dict())
+    comment_service = CommentService(db)
+    db_comment = comment_service.create_comment(post_id, comment_data, current_user.id)
+    return CommentPublic(**db_comment.to_dict())
 
 
 @router.get("/{post_id}/comments",response_model=List[CommentPublic])
 async def get_comments(post_id : str, db :Session = Depends(get_db_session), skip : int = 0, limit : int = 10):
 
-    post = db.query(Post).filter(Post.id == post_id).first()
-
-    if not post:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="No Post Found.")
-    
-    comments = db.query(Comment).filter(Comment.post_id == post_id).order_by(Comment.created_at.desc()).offset(skip).limit(limit).all()
-
+    comment_service = CommentService(db)
+    comments = comment_service.get_post_comments(post_id, skip, limit)
     return [CommentPublic(**comment.to_dict()) for comment in comments]
 
 
@@ -190,42 +170,16 @@ async def get_comments(post_id : str, db :Session = Depends(get_db_session), ski
 async def like_post(post_id : str , current_user : User = Depends(get_user_details), 
                     db: Session = Depends(get_db_session)):
     
-    post = db.query(Post).filter(Post.id == post_id).first()
-
-    if not post:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="No Post Found.")
-    
-    like = db.query(Like).filter(Like.user_id == current_user.id,Like.post_id == post_id).first()
-
-    if like:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,detail="Already liked.")
-        
-    new_like = Like(
-        user_id = current_user.id,
-        post_id = post_id
-        )
-    db.add(new_like)
-    db.commit()
-    db.refresh(new_like)
-
+    like_service = LikeService(db)
+    new_like = like_service.like_post(post_id, current_user.id)
     return LikeResponse(**new_like.to_dict())
 
 
 @router.delete("/likes",status_code=status.HTTP_204_NO_CONTENT)
 async def unlike(post_id : str, db : Session = Depends(get_db_session),current_user :User=Depends(get_user_details)):
 
-    post = db.query(Post).filter(Post.id == post_id).first()
-
-    if not post:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="No post Found.")
-    
-    liked = db.query(Like).filter(Like.user_id == current_user.id, Like.post_id == post_id).first()
-
-    if not liked:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="Not Liked")
-    
-    db.delete(liked)
-    db.commit()
+    like_service = LikeService(db)
+    like_service.unlike_post(post_id, current_user.id)
     return None
     
 
