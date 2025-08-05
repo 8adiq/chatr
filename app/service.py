@@ -8,23 +8,34 @@ from .schema import UserCreate, UserLogin, PostCreate, PostBase, CommentBase
 from .auth import hash_password, verify_password
 import secrets
 from datetime import datetime, timedelta
-from typing import List, Optional
+from typing import List
 
 
 load_dotenv()
 
 
-class EmailVerification:
+class EmailVerificationService:
     def __init__(self):
-        self.config = ConnectionConfig(
-        MAIL_USERNAME= os.getenv("EMAIL_USERNAME"),
-        MAIL_PASSWORD= os.getenv("EMAIL_PASSWORD"),
-        MAIL_PORT= 587,
-        MAIL_SERVER= "smtp.gmail.com",
-        MAIL_TLS = True,
-        MAIL_SSL = False
-        )
-        self.fm = FastMail(self.config)
+        # Check if email credentials are configured
+        email_username = os.getenv("EMAIL_USERNAME")
+        email_password = os.getenv("EMAIL_PASSWORD")
+        
+        if email_username and email_password:
+            self.config = ConnectionConfig(
+                MAIL_USERNAME=email_username,
+                MAIL_PASSWORD=email_password,
+                MAIL_PORT=587,
+                MAIL_SERVER="smtp.gmail.com",
+                MAIL_STARTTLS=True,
+                MAIL_SSL_TLS=False,
+                MAIL_FROM=email_username,
+                USE_CREDENTIALS=True
+            )
+            self.fm = FastMail(self.config)
+            self.email_enabled = True
+        else:
+            print("⚠️  Email credentials not configured. Email verification will be simulated.")
+            self.email_enabled = False
 
     def create_message_template(self,username:str,token:str) -> str:
         return f"""
@@ -39,6 +50,12 @@ class EmailVerification:
         """
 
     async def send_verification_email(self,username : str, user_email : str, token : str) -> bool :
+        if not self.email_enabled:
+            print(f"📧 [SIMULATED] Email verification sent to {user_email}")
+            print(f"📧 [SIMULATED] Token: {token}")
+            print(f"📧 [SIMULATED] Verification link: http://localhost:5173/verify?token={token}")
+            return True
+        
         try:
             template = self.create_message_template(username,token)
 
@@ -125,11 +142,11 @@ class UserService:
         
         return user
 
-    def get_user_by_email(self, email: str) -> Optional[User]:
+    def get_user_by_email(self, email: str) -> User:
         """Get user by email"""
         return self.db.query(User).filter(User.email == email).first()
 
-    def get_user_by_id(self, user_id: str) -> Optional[User]:
+    def get_user_by_id(self, user_id: str) -> User:
         """Get user by ID"""
         return self.db.query(User).filter(User.id == user_id).first()
 
@@ -168,7 +185,7 @@ class PostService:
         """Get all posts with pagination"""
         return self.db.query(Post).offset(skip).limit(limit).all()
 
-    def get_post_by_id(self, post_id: str) -> Optional[Post]:
+    def get_post_by_id(self, post_id: str) -> Post:
         """Get post by ID"""
         return self.db.query(Post).filter(Post.id == post_id).order_by(Post.created_at.desc()).first()
 

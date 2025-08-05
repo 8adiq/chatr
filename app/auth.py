@@ -47,6 +47,7 @@ def get_user_details(credentials: HTTPAuthorizationCredentials = Depends(securit
     try:
         payload = jwt.decode(credentials.credentials, SECRET_KEY, algorithms=[ALGORITHM])
         email = payload.get('sub')
+        exp = payload.get('exp')
 
         if email is None:
             raise HTTPException(status_code=401, detail='Invalid Token')

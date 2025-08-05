@@ -5,7 +5,8 @@ from .models import User,Post,Comment,Like,EmailVerificationToken
 from .schema import UserCreate,TokenResponse,UserResponse,UserLogin,PostPublic,PostCreate,PostBase,CommentBase,CommentCreate,CommentPublic,LikeResponse,LikeCreate,EmailVerification
 from .auth import get_user_details,create_token
 from .database import get_db_session
-from .service import EmailVerification as EmailVerificationService, UserService, PostService, CommentService, LikeService
+from .service import EmailVerificationService, UserService, PostService, CommentService, LikeService
+from datetime import datetime
 
 
 router = APIRouter()
@@ -80,6 +81,39 @@ async def email_verification_request(request: EmailVerification, db:Session=Depe
 
     if not email_sent:
         raise HTTPException(status_code=500, detail="Failed to send verification email.")
+    
+    return {"message": "Verification email sent successfully"}
+
+@router.post("/email-verification/confirm")
+async def email_verification_confirm(token: str, db: Session = Depends(get_db_session)):
+    """Confirm email verification with token"""
+    
+    # Find the verification token
+    verification_token = db.query(EmailVerificationToken).filter(
+        EmailVerificationToken.token == token,
+        EmailVerificationToken.used == False,
+        EmailVerificationToken.expires_at > datetime.utcnow()
+    ).first()
+    
+    if not verification_token:
+        raise HTTPException(status_code=400, detail="Invalid or expired verification token")
+    
+    # Get the user
+    user_service = UserService(db)
+    user = user_service.get_user_by_id(verification_token.user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Mark email as verified
+    user.email_varified = True
+    user.email_varified_at = datetime.utcnow()
+    
+    # Mark token as used
+    verification_token.used = True
+    
+    db.commit()
+    
+    return {"message": "Email verified successfully"}
 
 @router.get("/profile")
 async def show_profile(current_user : User = Depends(get_user_details)):
@@ -114,19 +148,7 @@ async def get_post(post_id : str ,db : Session = Depends(get_db_session)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
     return PostPublic(**post.to_dict())
 
-@router.get("/{user_id}/posts",response_model=List[PostPublic])
-async def get_user_post(user_id : str ,skip :int = 0, limit :  int =10,
-                        db: Session = Depends(get_db_session)):
-    
-    user_service = UserService(db)
-    post_service = PostService(db)
-    
-    user = user_service.get_user_by_id(user_id)
-    if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not Found.")
 
-    posts = post_service.get_user_posts(user_id, skip, limit)
-    return [PostPublic(**post.to_dict()) for post in posts]
 
 @router.put("/posts/{post_id}",response_model=PostPublic)
 async def update_post(post_data : PostBase , post_id : str , db : Session = Depends(get_db_session),
@@ -181,8 +203,19 @@ async def unlike(post_id : str, db : Session = Depends(get_db_session),current_u
     like_service = LikeService(db)
     like_service.unlike_post(post_id, current_user.id)
     return None
+
+
+# User Posts Route (moved to end to avoid conflicts with comments route)
+@router.get("/{user_id}/posts",response_model=List[PostPublic])
+async def get_user_post(user_id : str ,skip :int = 0, limit :  int =10,
+                        db: Session = Depends(get_db_session)):
     
+    user_service = UserService(db)
+    post_service = PostService(db)
+    
+    user = user_service.get_user_by_id(user_id)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not Found.")
 
-
-
-
+    posts = post_service.get_user_posts(user_id, skip, limit)
+    return [PostPublic(**post.to_dict()) for post in posts]

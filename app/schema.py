@@ -17,7 +17,7 @@ class UserResponse(UserBase):
     id: str
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class TokenResponse(BaseModel):
     user: UserResponse
@@ -36,7 +36,7 @@ class PostPublic(PostBase):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # Comments schema
 class CommentBase(BaseModel):
@@ -53,7 +53,7 @@ class CommentPublic(CommentBase):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # Likes schema
 class LikeBase(BaseModel):
@@ -67,4 +67,15 @@ class LikeResponse(LikeBase):
     id: str
     
     class Config:
-        orm_mode = True
+        from_attributes = True
+
+
+class EmailVerification(BaseModel):
+    email : EmailStr
+
+class EmailVerificationConfirm(BaseModel):
+    id: str
+    email_verified: bool
+
+    class Config:
+        from_attributes = True
