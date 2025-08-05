@@ -1,11 +1,11 @@
 from fastapi import APIRouter, HTTPException,Depends, status
 from sqlalchemy.orm import Session
 from typing import List
-from .models import User,Post,Comment,Like,EmailVerificationToken
-from .schema import UserCreate,TokenResponse,UserResponse,UserLogin,PostPublic,PostCreate,PostBase,CommentBase,CommentCreate,CommentPublic,LikeResponse,LikeCreate,EmailVerification
+from .models import User,Post,Comment,Like
+from .schema import UserCreate,TokenResponse,UserResponse,UserLogin,PostPublic,PostCreate,PostBase,CommentBase,CommentCreate,CommentPublic,LikeResponse,LikeCreate
 from .auth import get_user_details,create_token
 from .database import get_db_session
-from .service import EmailVerificationService, UserService, PostService, CommentService, LikeService
+from .service import UserService, PostService, CommentService, LikeService
 from datetime import datetime
 
 
@@ -16,22 +16,9 @@ router = APIRouter()
 async def register(user_data: UserCreate, db: Session = Depends(get_db_session)):
 
     user_service = UserService(db)
-    email_service = EmailVerificationService()
     
     # Create user with validation
     db_user = user_service.create_user(user_data)
-    
-    # Create verification token
-    verification_token = user_service.create_verification_token(db_user.id)
-    
-    # Send verification email
-    email_sent = await email_service.send_verification_email(
-        username=db_user.username,
-        user_email=db_user.email,
-        token=verification_token
-    )
-    if not email_sent:
-        raise HTTPException(status_code=500, detail="Failed to send verification email.")
 
     access_token = create_token(data={"sub": db_user.email})
     return {
@@ -52,72 +39,22 @@ async def login(user_data: UserLogin, db : Session = Depends(get_db_session)):
         "token": access_token
     }
 
-@router.post("/email-verification/request")
-async def email_verification_request(request: EmailVerification, db:Session=Depends(get_db_session)):
 
-    user_service = UserService(db)
-    email_service = EmailVerificationService()
-    
-    user = user_service.get_user_by_email(request.email)
-
-    if not user:
-        return {"message: Email already exists, Verification link sent"}
-    
-    if user.email_varified:
-        raise HTTPException(status_code=400, detail="Email already verified")
-    
-    # Delete existing verification tokens
-    user_service.delete_existing_verification_tokens(user.id)
-
-    # Create new verification token
-    verification_token = user_service.create_verification_token(user.id)
-
-    # Send verification email
-    email_sent = await email_service.send_verification_email(
-        username=user.username,
-        user_email=user.email,
-        token=verification_token
-    )
-
-    if not email_sent:
-        raise HTTPException(status_code=500, detail="Failed to send verification email.")
-    
-    return {"message": "Verification email sent successfully"}
-
-@router.post("/email-verification/confirm")
-async def email_verification_confirm(token: str, db: Session = Depends(get_db_session)):
-    """Confirm email verification with token"""
-    
-    # Find the verification token
-    verification_token = db.query(EmailVerificationToken).filter(
-        EmailVerificationToken.token == token,
-        EmailVerificationToken.used == False,
-        EmailVerificationToken.expires_at > datetime.utcnow()
-    ).first()
-    
-    if not verification_token:
-        raise HTTPException(status_code=400, detail="Invalid or expired verification token")
-    
-    # Get the user
-    user_service = UserService(db)
-    user = user_service.get_user_by_id(verification_token.user_id)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    # Mark email as verified
-    user.email_varified = True
-    user.email_varified_at = datetime.utcnow()
-    
-    # Mark token as used
-    verification_token.used = True
-    
-    db.commit()
-    
-    return {"message": "Email verified successfully"}
 
 @router.get("/profile")
 async def show_profile(current_user : User = Depends(get_user_details)):
     return {"user": UserResponse(**current_user.to_dict())}
+
+@router.get("/users/{user_id}", response_model=UserResponse)
+async def get_user_by_id(user_id: str, db: Session = Depends(get_db_session)):
+    """Get user details by user ID"""
+    user_service = UserService(db)
+    user = user_service.get_user_by_id(user_id)
+    
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    
+    return UserResponse(**user.to_dict())
 
 
 # Post Routes

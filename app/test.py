@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Comprehensive API testing script for the FastAPI backend
-Tests all endpoints: Users, Posts, Comments, Likes, Email Verification
+Tests all endpoints: Users, Posts, Comments, Likes
 """
 import requests
 import json
@@ -32,7 +32,6 @@ auth_token = None
 user_id = None
 post_id = None
 comment_id = None
-verification_token = None
 
 def print_test_header(test_name):
     """Print a formatted test header"""
@@ -76,94 +75,27 @@ def test_registration():
     print_test_result(True, "Registration successful!")
     return True
 
-def test_login_before_verification():
-    """Test user login before email verification (should fail)"""
-    global auth_token, user_id
-    
-    print_test_header("User Login Before Email Verification")
-    
-    response = requests.post(f"{API_BASE}/login", json=test_user)
-    print(f"Status: {response.status_code}")
-    
-    assert response.status_code == 401, f"Login should fail before verification, got {response.status_code}"
-    
-    data = response.json()
-    assert "Please verify your email" in data.get('detail', ''), "Wrong error message"
-    
-    print(f"Response: {json.dumps(data, indent=2)}")
-    print_test_result(True, "Login correctly blocked - email not verified!")
-    return True
-
-def test_email_verification_request():
-    """Test email verification request"""
-    print_test_header("Email Verification Request")
-    
-    verification_data = {
-        "email": test_user["email"]
-    }
-    
-    response = requests.post(f"{API_BASE}/email-verification/request", json=verification_data)
-    print(f"Status: {response.status_code}")
-    
-    assert response.status_code == 200, f"Email verification request failed with status {response.status_code}"
-    
-    data = response.json()
-    assert "message" in data, "No message in response"
-    
-    print(f"Response: {json.dumps(data, indent=2)}")
-    print_test_result(True, "Email verification request successful!")
-    return True
-
-def test_email_verification_confirm():
-    """Test email verification confirmation"""
-    global verification_token
-    
-    print_test_header("Email Verification Confirmation")
-    
-    # Note: In a real scenario, you'd get this token from the email
-    # For testing, we'll simulate with a dummy token (this will fail)
-    # In practice, you'd need to extract the token from the database or email
-    
-    dummy_token = "dummy_token_for_testing"
-    
-    response = requests.post(f"{API_BASE}/email-verification/confirm?token={dummy_token}")
-    print(f"Status: {response.status_code}")
-    
-    assert response.status_code == 400, f"Invalid token should be rejected, got {response.status_code}"
-    
-    data = response.json()
-    assert "Invalid or expired" in data.get('detail', ''), "Wrong error message for invalid token"
-    
-    print(f"Response: {json.dumps(data, indent=2)}")
-    print_test_result(True, "Invalid token correctly rejected!")
-    print("Note: In real testing, you'd use a valid token from the database")
-    return True
-
 def test_login():
-    """Test user login after email verification"""
+    """Test user login"""
     global auth_token, user_id
     
-    print_test_header("User Login After Email Verification")
+    print_test_header("User Login")
     
     response = requests.post(f"{API_BASE}/login", json=test_user)
     print(f"Status: {response.status_code}")
     
-    # This will fail until email is actually verified
-    if response.status_code == 200:
-        data = response.json()
-        auth_token = data.get('token')
-        user_id = data.get('user', {}).get('id')
-        
-        assert auth_token is not None, "No token received"
-        assert user_id is not None, "No user ID received"
-        
-        print(f"Response: {json.dumps(data, indent=2)}")
-        print_test_result(True, "Login successful!")
-        return True
-    else:
-        print(f"Response: {response.text}")
-        print_test_result(False, "Login failed - email not verified yet")
-        return False
+    assert response.status_code == 200, f"Login failed with status {response.status_code}"
+    
+    data = response.json()
+    auth_token = data.get('token')
+    user_id = data.get('user', {}).get('id')
+    
+    assert auth_token is not None, "No token received"
+    assert user_id is not None, "No user ID received"
+    
+    print(f"Response: {json.dumps(data, indent=2)}")
+    print_test_result(True, "Login successful!")
+    return True
 
 def test_profile():
     """Test getting user profile"""
@@ -459,16 +391,9 @@ def main():
     try:
         # Test user operations
         test_registration()
-        
-        # Test email verification flow
-        test_login_before_verification()  # Should fail
-        test_email_verification_request()  # Request verification email
-        test_email_verification_confirm()  # Test token validation
-        
-        # Test login (will fail until email is actually verified)
         test_login()
         
-        # Test profile (will only work if login succeeded)
+        # Test profile
         test_profile()
         
         # Test post operations
@@ -492,10 +417,6 @@ def main():
         print("\n" + "=" * 60)
         print("🎉 All tests completed successfully!")
         print("=" * 60)
-        print("\n📝 Notes:")
-        print("- Email verification tests use dummy tokens")
-        print("- For complete testing, manually verify email or extract token from database")
-        print("- Some tests may fail until email verification is complete")
         
         # Clean up test data
         cleanup_test_data()

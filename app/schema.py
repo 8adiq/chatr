@@ -33,6 +33,7 @@ class PostCreate(PostBase):
 class PostPublic(PostBase):
     id: str
     user_id: str
+    username : str
     created_at: datetime
 
     class Config:
@@ -70,12 +71,3 @@ class LikeResponse(LikeBase):
         from_attributes = True
 
 
-class EmailVerification(BaseModel):
-    email : EmailStr
-
-class EmailVerificationConfirm(BaseModel):
-    id: str
-    email_verified: bool
-
-    class Config:
-        from_attributes = True

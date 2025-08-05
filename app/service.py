@@ -1,76 +1,10 @@
-from fastapi_mail import fastmail,MessageSchema,ConnectionConfig,FastMail
-import os 
-from dotenv import load_dotenv
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
-from .models import User, Post, Comment, Like, EmailVerificationToken
+from .models import User, Post, Comment, Like
 from .schema import UserCreate, UserLogin, PostCreate, PostBase, CommentBase
 from .auth import hash_password, verify_password
-import secrets
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import List
-
-
-load_dotenv()
-
-
-class EmailVerificationService:
-    def __init__(self):
-        # Check if email credentials are configured
-        email_username = os.getenv("EMAIL_USERNAME")
-        email_password = os.getenv("EMAIL_PASSWORD")
-        
-        if email_username and email_password:
-            self.config = ConnectionConfig(
-                MAIL_USERNAME=email_username,
-                MAIL_PASSWORD=email_password,
-                MAIL_PORT=587,
-                MAIL_SERVER="smtp.gmail.com",
-                MAIL_STARTTLS=True,
-                MAIL_SSL_TLS=False,
-                MAIL_FROM=email_username,
-                USE_CREDENTIALS=True
-            )
-            self.fm = FastMail(self.config)
-            self.email_enabled = True
-        else:
-            print("⚠️  Email credentials not configured. Email verification will be simulated.")
-            self.email_enabled = False
-
-    def create_message_template(self,username:str,token:str) -> str:
-        return f"""
-        <html>
-            <body>
-                <h2>Welcome {username}!</h2>
-                <p>Please verify your email by clicking this link:</p>
-                <a href="http://localhost:5173/verify?token={token}">Verify Email</a>
-                <p>This link expires in 24 hours.</p>
-            </body>
-        </html>
-        """
-
-    async def send_verification_email(self,username : str, user_email : str, token : str) -> bool :
-        if not self.email_enabled:
-            print(f"📧 [SIMULATED] Email verification sent to {user_email}")
-            print(f"📧 [SIMULATED] Token: {token}")
-            print(f"📧 [SIMULATED] Verification link: http://localhost:5173/verify?token={token}")
-            return True
-        
-        try:
-            template = self.create_message_template(username,token)
-
-            message = MessageSchema(
-                subject= "Email Verification",
-                recipients=[user_email],
-                body= template,
-                subtype='html'
-            )
-            await self.fm.send_message(message)
-            return True
-
-        except Exception as e:
-             print(f"Failed to send email: {e}")
-             return False
 
 
 class UserService:
@@ -118,27 +52,12 @@ class UserService:
         self.db.refresh(db_user)
         return db_user
 
-    def create_verification_token(self, user_id: str) -> str:
-        """Create email verification token for user"""
-        verification_token = secrets.token_urlsafe(32)
-        verification_record = EmailVerificationToken(
-            user_id=user_id,
-            token=verification_token,
-            expires_at=datetime.utcnow() + timedelta(hours=24)
-        )
-        self.db.add(verification_record)
-        self.db.commit()
-        return verification_token
-
     def authenticate_user(self, user_data: UserLogin) -> User:
         """Authenticate user login"""
         user = self.db.query(User).filter(User.email == user_data.email).first()
 
         if not user or not verify_password(user_data.password, user.hashed_password):
             raise HTTPException(status_code=401, detail="Invalid credentials")
-        
-        if not user.email_varified:
-            raise HTTPException(status_code=401, detail="Please verify your email before logging in")
         
         return user
 
@@ -149,14 +68,6 @@ class UserService:
     def get_user_by_id(self, user_id: str) -> User:
         """Get user by ID"""
         return self.db.query(User).filter(User.id == user_id).first()
-
-    def delete_existing_verification_tokens(self, user_id: str) -> None:
-        """Delete existing unused verification tokens for user"""
-        self.db.query(EmailVerificationToken).filter(
-            EmailVerificationToken.user_id == user_id,
-            EmailVerificationToken.used == False
-        ).delete()
-        self.db.commit()
 
 
 class PostService:
@@ -183,7 +94,7 @@ class PostService:
 
     def get_all_posts(self, skip: int = 0, limit: int = 50) -> List[Post]:
         """Get all posts with pagination"""
-        return self.db.query(Post).offset(skip).limit(limit).all()
+        return self.db.query(Post).join(User).order_by(Post.created_at.desc()).offset(skip).limit(limit).all()
 
     def get_post_by_id(self, post_id: str) -> Post:
         """Get post by ID"""
