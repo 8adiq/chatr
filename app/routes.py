@@ -141,6 +141,13 @@ async def unlike(post_id : str, db : Session = Depends(get_db_session),current_u
     like_service.unlike_post(post_id, current_user.id)
     return None
 
+@router.get("/user/likes")
+async def get_user_likes(current_user: User = Depends(get_user_details), db: Session = Depends(get_db_session)):
+    """Get all posts liked by the current user"""
+    like_service = LikeService(db)
+    likes = like_service.get_user_likes(current_user.id)
+    return [{"post_id": like.post_id} for like in likes]
+
 
 # User Posts Route (moved to end to avoid conflicts with comments route)
 @router.get("/{user_id}/posts",response_model=List[PostPublic])

@@ -1,40 +1,98 @@
 import { useState, useEffect } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import './App.css';
-import { getUserById } from './api';
-import { useAuth } from './hooks/useAuth';
-import { usePosts } from './hooks/usePosts';
-import { useComments } from './hooks/useComments';
+import { getUserById, getComments } from './api';
+import { usePosts, useCreatePost, useUpdatePost, useDeletePost, useLikePost } from './hooks/usePostsQuery';
+import { useComments, useCreateComment } from './hooks/useCommentsQuery';
+import { useProfile, useLogin, useRegister, useUserLikes } from './hooks/useAuthQuery';
 import { formatDate, getRandomAvatar } from './utils/helpers';
 import AuthForm from './components/AuthForm';
 import Feed from './components/Feed';
 import UserModal from './components/UserModal';
 import CreatePostModal from './components/CreatePostModal';
 
-function App() {
+// Create a client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      cacheTime: 10 * 60 * 1000, // 10 minutes
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+    mutations: {
+      retry: 1,
+    },
+  },
+});
+
+function AppContent() {
   const [mode, setMode] = useState('login'); // 'login' | 'register' | 'feed' | 'create-post'
   const [form, setForm] = useState({ username: '', email: '', password: '' });
-  
-
   
   // User details modal state
   const [selectedUser, setSelectedUser] = useState(null);
   const [showUserModal, setShowUserModal] = useState(false);
+  const [viewingUserPosts, setViewingUserPosts] = useState(null);
   
   // Post editing state
   const [editingPost, setEditingPost] = useState(null);
   const [newPost, setNewPost] = useState({ text: '' });
+  const [newComment, setNewComment] = useState({});
+  const [loadedComments, setLoadedComments] = useState({});
+  const [likedPosts, setLikedPosts] = useState(new Set());
   
-  // Custom hooks
-  const auth = useAuth();
-  const posts = usePosts(auth.token);
-  const comments = useComments(auth.token);
+  // Authentication state
+  const [token, setToken] = useState(() => localStorage.getItem('token') || '');
+  const [user, setUser] = useState(null);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
+  // React Query hooks
+  const { data: postsData, isLoading: postsLoading, error: postsError } = usePosts();
+  const { data: profileData, isLoading: profileLoading } = useProfile(token);
+  const { data: userLikesData } = useUserLikes(token);
+  
+  // Filter posts when viewing a specific user's posts
+  const filteredPosts = viewingUserPosts 
+    ? (postsData || []).filter(post => post.user_id === viewingUserPosts.id)
+    : (postsData || []);
+  
+  // Mutations
+  const createPostMutation = useCreatePost();
+  const updatePostMutation = useUpdatePost();
+  const deletePostMutation = useDeletePost();
+  const likePostMutation = useLikePost();
+  const createCommentMutation = useCreateComment();
+  const loginMutation = useLogin();
+  const registerMutation = useRegister();
+
+  // Update user when profile data changes
   useEffect(() => {
-    if (auth.token && auth.user) {
-      setMode('feed');
-      posts.loadPosts();
+    if (profileData?.user) {
+      setUser(profileData.user);
     }
-  }, [auth.token, auth.user]);
+  }, [profileData]);
+
+  // Sync liked posts when user likes are loaded
+  useEffect(() => {
+    if (userLikesData) {
+      const likedPostIds = userLikesData.map(like => like.post_id);
+      setLikedPosts(new Set(likedPostIds));
+    }
+  }, [userLikesData]);
+
+  // Handle authentication success
+  const handleAuthSuccess = (data) => {
+    setToken(data.token);
+    localStorage.setItem('token', data.token);
+    setUser(data.user);
+  };
+
+  const clearMessages = () => {
+    setError('');
+    setSuccess('');
+  };
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -43,33 +101,37 @@ function App() {
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
-      await auth.handleRegister(form);
+      const data = await registerMutation.mutateAsync(form);
+      handleAuthSuccess(data);
       setMode('feed');
-      posts.loadPosts();
     } catch (err) {
-      // Error is handled by the hook
+      setError(err.message);
     }
   };
 
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      await auth.handleLogin(form);
+      const data = await loginMutation.mutateAsync(form);
+      handleAuthSuccess(data);
       setMode('feed');
-      posts.loadPosts();
     } catch (err) {
-      // Error is handled by the hook
+      setError(err.message);
     }
   };
 
   const handleLogout = () => {
-    auth.handleLogout();
+    setToken('');
+    setUser(null);
+    localStorage.removeItem('token');
     setForm({ username: '', email: '', password: '' });
     setMode('login');
     setEditingPost(null);
     setNewPost({ text: '' });
     setShowUserModal(false);
     setSelectedUser(null);
+    setError('');
+    setSuccess('');
   };
 
   const handleCreatePost = async (e) => {
@@ -77,56 +139,78 @@ function App() {
     if (!newPost.text.trim()) return;
     
     try {
-      await posts.handleCreatePost(newPost);
+      await createPostMutation.mutateAsync({ postData: newPost, token: token });
       setNewPost({ text: '' });
       setMode('feed');
     } catch (err) {
-      // Error is handled by the hook
+      // Error is handled by React Query
     }
   };
 
   const handleUpdatePost = async (postId, text) => {
     try {
-      await posts.handleUpdatePost(postId, text);
+      await updatePostMutation.mutateAsync({ postId, text, token: token });
       setEditingPost(null);
     } catch (err) {
-      // Error is handled by the hook
+      // Error is handled by React Query
     }
   };
 
   const handleDeletePost = async (postId) => {
     try {
-      await posts.handleDeletePost(postId);
+      await deletePostMutation.mutateAsync({ postId, token: token });
     } catch (err) {
-      // Error is handled by the hook
+      // Error is handled by React Query
     }
   };
 
   const handleCreateComment = async (postId) => {
     try {
-      await comments.handleCreateComment(postId);
+      const commentText = newComment[postId];
+      if (!commentText?.trim()) return;
+      
+      const newCommentData = await createCommentMutation.mutateAsync({ 
+        postId, 
+        commentData: { text: commentText }, 
+        token: token 
+      });
+      
+      // Clear the comment input
+      setNewComment(prev => ({
+        ...prev,
+        [postId]: ''
+      }));
+      
+      // Immediately add the new comment to the loaded comments
+      setLoadedComments(prev => ({
+        ...prev,
+        [postId]: [...(prev[postId] || []), newCommentData]
+      }));
     } catch (err) {
-      // Error is handled by the hook
-    }
-  };
-
-  const loadComments = async (postId) => {
-    try {
-      await comments.loadComments(postId);
-    } catch (err) {
-      // Error is handled by the hook
+      console.error('Error creating comment:', err);
     }
   };
 
   const handleLikePost = async (postId) => {
     try {
-      await posts.handleLikePost(postId);
+      const isLiked = likedPosts.has(postId);
+      
+      await likePostMutation.mutateAsync({ postId, token: token, isLiked });
+      
+      // Update local like state
+      setLikedPosts(prev => {
+        const newSet = new Set(prev);
+        if (isLiked) {
+          newSet.delete(postId);
+        } else {
+          newSet.add(postId);
+        }
+        return newSet;
+      });
     } catch (err) {
-      // Error is handled by the hook
+      console.error('Error liking post:', err);
     }
   };
-
-
 
   const handleUserClick = async (userId) => {
     try {
@@ -134,7 +218,7 @@ function App() {
       setSelectedUser(userData);
       setShowUserModal(true);
     } catch (err) {
-      auth.setError('Failed to load user details');
+      setError('Failed to load user details');
     }
   };
 
@@ -146,8 +230,25 @@ function App() {
     setEditingPost(null);
   };
 
+  const handleLoadComments = async (postId) => {
+    if (loadedComments[postId]) return; // Already loaded
+    
+    try {
+      const comments = await getComments(postId);
+      setLoadedComments(prev => ({
+        ...prev,
+        [postId]: comments
+      }));
+    } catch (err) {
+      console.error('Failed to load comments:', err);
+    }
+  };
+
   const handleNewCommentChange = (postId, value) => {
-    comments.handleNewCommentChange(postId, value);
+    setNewComment(prev => ({
+      ...prev,
+      [postId]: value
+    }));
   };
 
   const handleNewPostChange = (e) => {
@@ -156,30 +257,27 @@ function App() {
 
   const handleModeChange = (newMode) => {
     setMode(newMode);
-    auth.clearMessages();
+    clearMessages();
   };
-
-
 
   const handleViewPosts = () => {
-    // TODO: Implement view user posts
+    setViewingUserPosts(selectedUser);
     setShowUserModal(false);
   };
 
-  const handleUploadAvatar = () => {
-    // TODO: Implement avatar upload
-    setShowUserModal(false);
+  const handleBackToFeed = () => {
+    setViewingUserPosts(null);
   };
 
   // If not authenticated, show auth form
-  if (!auth.token) {
+  if (!token) {
     return (
       <AuthForm
         mode={mode}
         form={form}
-        loading={auth.loading}
-        error={auth.error}
-        success={auth.success}
+        loading={loginMutation.isPending || registerMutation.isPending}
+        error={error}
+        success={success}
         onFormChange={handleChange}
         onSubmit={mode === 'login' ? handleLogin : handleRegister}
         onModeChange={handleModeChange}
@@ -192,15 +290,16 @@ function App() {
     return (
       <>
         <Feed
-          user={auth.user}
-          posts={posts.posts}
-          comments={comments.comments}
-          newComment={comments.newComment}
+          user={user}
+          posts={filteredPosts}
+          comments={loadedComments}
+          newComment={newComment}
           editingPost={editingPost}
-          likedPosts={posts.likedPosts}
-          loading={posts.loading || comments.loading}
-          error={posts.error || comments.error}
-          success={auth.success}
+          likedPosts={likedPosts}
+          loading={postsLoading}
+          error={postsError?.message}
+          success={success}
+          viewingUserPosts={viewingUserPosts}
           onCreatePost={() => setMode('create-post')}
           onLogout={handleLogout}
           onUserClick={handleUserClick}
@@ -208,15 +307,16 @@ function App() {
           onDeletePost={handleDeletePost}
           onUpdatePost={handleUpdatePost}
           onLikePost={handleLikePost}
-          onLoadComments={loadComments}
+          onLoadComments={handleLoadComments}
           onCreateComment={handleCreateComment}
           onNewCommentChange={handleNewCommentChange}
           onCancelEdit={handleCancelEdit}
+          onBackToFeed={handleBackToFeed}
           formatDate={formatDate}
         />
         <CreatePostModal
           newPost={newPost}
-          loading={posts.loading}
+          loading={createPostMutation.isPending}
           onClose={() => setMode('feed')}
           onSubmit={handleCreatePost}
           onTextChange={handleNewPostChange}
@@ -229,15 +329,16 @@ function App() {
   return (
     <>
       <Feed
-        user={auth.user}
-        posts={posts.posts}
-        comments={comments.comments}
-        newComment={comments.newComment}
+        user={user}
+        posts={filteredPosts}
+        comments={loadedComments}
+        newComment={newComment}
         editingPost={editingPost}
-        likedPosts={posts.likedPosts}
-        loading={posts.loading || comments.loading}
-        error={posts.error || comments.error}
-        success={auth.success}
+        likedPosts={likedPosts}
+        loading={postsLoading}
+        error={postsError?.message}
+        success={success}
+        viewingUserPosts={viewingUserPosts}
         onCreatePost={() => setMode('create-post')}
         onLogout={handleLogout}
         onUserClick={handleUserClick}
@@ -245,10 +346,11 @@ function App() {
         onDeletePost={handleDeletePost}
         onUpdatePost={handleUpdatePost}
         onLikePost={handleLikePost}
-        onLoadComments={loadComments}
+        onLoadComments={handleLoadComments}
         onCreateComment={handleCreateComment}
         onNewCommentChange={handleNewCommentChange}
         onCancelEdit={handleCancelEdit}
+        onBackToFeed={handleBackToFeed}
         formatDate={formatDate}
       />
       {showUserModal && (
@@ -256,11 +358,18 @@ function App() {
           selectedUser={selectedUser}
           onClose={() => setShowUserModal(false)}
           onViewPosts={handleViewPosts}
-          onUploadAvatar={handleUploadAvatar}
           getRandomAvatar={getRandomAvatar}
         />
       )}
     </>
+  );
+}
+
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AppContent />
+    </QueryClientProvider>
   );
 }
 

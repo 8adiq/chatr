@@ -50,6 +50,7 @@ class CommentCreate(CommentBase):
 class CommentPublic(CommentBase):
     id: str
     user_id: str
+    username: str
     post_id: str
     created_at: datetime
 
@@ -66,6 +67,7 @@ class LikeCreate(LikeBase):
 
 class LikeResponse(LikeBase):
     id: str
+    username: str
     
     class Config:
         from_attributes = True

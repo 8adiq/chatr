@@ -788,3 +788,9 @@ button:disabled {
 .upload-avatar-btn:hover {
   background: #218838;
 }
+
+.back-section {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}

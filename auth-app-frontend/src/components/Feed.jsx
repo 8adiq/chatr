@@ -12,6 +12,7 @@ const Feed = ({
   loading,
   error,
   success,
+  viewingUserPosts,
   onCreatePost,
   onLogout,
   onUserClick,
@@ -23,15 +24,18 @@ const Feed = ({
   onCreateComment,
   onNewCommentChange,
   onCancelEdit,
+  onBackToFeed,
   formatDate
 }) => {
   return (
     <div className="feed-container">
       <FeedHeader 
         user={user}
+        viewingUserPosts={viewingUserPosts}
         onCreatePost={onCreatePost}
         onLogout={onLogout}
         onUserClick={onUserClick}
+        onBackToFeed={onBackToFeed}
       />
 
       {loading && <p className="loading">Loading...</p>}

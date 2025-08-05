@@ -4,7 +4,6 @@ const UserModal = ({
   selectedUser, 
   onClose, 
   onViewPosts, 
-  onUploadAvatar,
   getRandomAvatar 
 }) => {
   if (!selectedUser) return null;
@@ -23,7 +22,7 @@ const UserModal = ({
           <div className="user-avatar-section">
             <div className="avatar-container">
               <img 
-                src={getRandomAvatar(selectedUser.username)} 
+                src={getRandomAvatar(selectedUser.username)}
                 alt={`${selectedUser.username}'s avatar`}
                 className="user-avatar"
                 onError={(e) => {
@@ -59,12 +58,6 @@ const UserModal = ({
               className="view-posts-btn"
             >
               View Posts
-            </button>
-            <button 
-              onClick={onUploadAvatar}
-              className="upload-avatar-btn"
-            >
-              Upload Avatar
             </button>
           </div>
         </div>

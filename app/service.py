@@ -128,6 +128,17 @@ class PostService:
         if post.user_id != current_user_id:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You can only delete your own post.")
 
+        # Delete related likes first
+        likes = self.db.query(Like).filter(Like.post_id == post_id).all()
+        for like in likes:
+            self.db.delete(like)
+        
+        # Delete related comments first
+        comments = self.db.query(Comment).filter(Comment.post_id == post_id).all()
+        for comment in comments:
+            self.db.delete(comment)
+        
+        # Now delete the post
         self.db.delete(post)
         self.db.commit()
 
@@ -217,4 +228,8 @@ class LikeService:
         
         self.db.delete(liked)
         self.db.commit()
+
+    def get_user_likes(self, user_id: str) -> List[Like]:
+        """Get all likes by a user"""
+        return self.db.query(Like).filter(Like.user_id == user_id).all()
 

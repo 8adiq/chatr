@@ -1,5 +1,5 @@
 fenv/
 __pycache__/
 *.pyc
-# .env
+.env
 app/test.py

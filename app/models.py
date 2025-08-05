@@ -59,6 +59,7 @@ class Comment(Base):
             "id": self.id,
             "text": self.text,
             "user_id": self.user_id,
+            "username": self.user.username,
             "post_id": self.post_id,
             "created_at": self.created_at.isoformat()
         }
@@ -83,6 +84,7 @@ class Like(Base):
         return {
             "id": self.id,
             "user_id": self.user_id,
+            "username": self.user.username,
             "post_id": self.post_id
         }
     

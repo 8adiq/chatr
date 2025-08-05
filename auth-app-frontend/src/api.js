@@ -127,4 +127,11 @@ export async function unlikePost(postId, token) {
     throw new Error(errorData.detail || `HTTP error! status: ${res.status}`);
   }
   return null; // 204 No Content
+}
+
+export async function getUserLikes(token) {
+  const res = await fetch(`${API_BASE}/user/likes`, {
+    headers: getAuthHeaders(token),
+  });
+  return handleResponse(res);
 } 
