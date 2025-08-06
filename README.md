@@ -1,4 +1,4 @@
-# Auth App (FastAPI + React)
+# chatr
 
 A fullstack authentication application with a FastAPI backend and a React (Vite) frontend. Supports user registration, login, JWT-based authentication, profile viewing, and social features like posts, comments, and likes.
 
@@ -12,8 +12,6 @@ A fullstack authentication application with a FastAPI backend and a React (Vite)
 - Passwords securely hashed (bcrypt)
 - CORS enabled for frontend-backend communication
 - Modern React frontend (Vite)
-- Database migrations with Alembic
-- Comprehensive testing suite
 
 ---
 
