@@ -3,3 +3,4 @@ __pycache__/
 *.pyc
 .env
 app/test.py
+reset_database.py
