@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from fastapi import HTTPException, status
 from .models import User, Post, Comment, Like
 from .schema import UserCreate, UserLogin, PostCreate, PostBase, CommentBase
@@ -94,15 +94,24 @@ class PostService:
 
     def get_all_posts(self, skip: int = 0, limit: int = 50) -> List[Post]:
         """Get all posts with pagination"""
-        return self.db.query(Post).join(User).order_by(Post.created_at.desc()).offset(skip).limit(limit).all()
+        return self.db.query(Post).join(User).options(
+            joinedload(Post.likes),
+            joinedload(Post.comments)
+        ).order_by(Post.created_at.desc()).offset(skip).limit(limit).all()
 
     def get_post_by_id(self, post_id: str) -> Post:
         """Get post by ID"""
-        return self.db.query(Post).filter(Post.id == post_id).order_by(Post.created_at.desc()).first()
+        return self.db.query(Post).options(
+            joinedload(Post.likes),
+            joinedload(Post.comments)
+        ).filter(Post.id == post_id).order_by(Post.created_at.desc()).first()
 
     def get_user_posts(self, user_id: str, skip: int = 0, limit: int = 10) -> List[Post]:
         """Get posts by user ID with pagination"""
-        return self.db.query(Post).filter(Post.user_id == user_id).order_by(Post.created_at.desc()).offset(skip).limit(limit).all()
+        return self.db.query(Post).options(
+            joinedload(Post.likes),
+            joinedload(Post.comments)
+        ).filter(Post.user_id == user_id).order_by(Post.created_at.desc()).offset(skip).limit(limit).all()
 
     def update_post(self, post_id: str, post_data: PostBase, current_user_id: str) -> Post:
         """Update a post"""

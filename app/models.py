@@ -30,6 +30,8 @@ class Post(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     user = relationship("User", backref="posts")
+    likes = relationship("Like", back_populates="post", cascade="all, delete-orphan")
+    comments = relationship("Comment", back_populates="post", cascade="all, delete-orphan")
 
     def to_dict(self):
         return {
@@ -37,7 +39,9 @@ class Post(Base):
             "text": self.text,
             "user_id": self.user_id,
             "username": self.user.username,
-            "created_at": self.created_at.isoformat()
+            "created_at": self.created_at.isoformat(),
+            "like_count": len(self.likes),
+            "comment_count": len(self.comments)
         }
     
     def __repr__(self):
@@ -52,7 +56,7 @@ class Comment(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     user = relationship("User", backref="comments")
-    post = relationship("Post", backref="comments")
+    post = relationship("Post", back_populates="comments")
 
     def to_dict(self):
         return {
@@ -74,7 +78,7 @@ class Like(Base):
     post_id = Column(String(36), ForeignKey("Posts.id"), nullable=False)
 
     user = relationship("User", backref="likes")
-    post = relationship("Post", backref="likes")
+    post = relationship("Post", back_populates="likes")
     
     # Prevent duplicate likes
     __table_args__ = (UniqueConstraint('user_id', 'post_id', name='unique_user_post_like'),)
