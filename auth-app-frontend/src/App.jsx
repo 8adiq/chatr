@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
 import './App.css';
 import { getUserById, getComments } from './api';
 import { usePosts, useCreatePost, useUpdatePost, useDeletePost, useLikePost } from './hooks/usePostsQuery';
@@ -27,6 +27,7 @@ const queryClient = new QueryClient({
 });
 
 function AppContent() {
+  const queryClient = useQueryClient();
   const [mode, setMode] = useState('login'); // 'login' | 'register' | 'feed' | 'create-post'
   const [form, setForm] = useState({ username: '', email: '', password: '' });
   
@@ -186,6 +187,23 @@ function AppContent() {
         ...prev,
         [postId]: [...(prev[postId] || []), newCommentData]
       }));
+      
+      // Update post comment count
+      queryClient.setQueryData(['posts', 'list'], (oldData) => {
+        if (!oldData) return oldData;
+        console.log('Updating comment count for post:', postId);
+        return oldData.map(post => {
+          if (post.id === postId) {
+            const newCount = (post.comment_count || 0) + 1;
+            console.log('Post comment count updated:', post.comment_count, '->', newCount);
+            return {
+              ...post,
+              comment_count: newCount
+            };
+          }
+          return post;
+        });
+      });
     } catch (err) {
       console.error('Error creating comment:', err);
     }
@@ -206,6 +224,23 @@ function AppContent() {
           newSet.add(postId);
         }
         return newSet;
+      });
+      
+      // Update post like count
+      queryClient.setQueryData(['posts', 'list'], (oldData) => {
+        if (!oldData) return oldData;
+        console.log('Updating like count for post:', postId, 'isLiked:', isLiked);
+        return oldData.map(post => {
+          if (post.id === postId) {
+            const newCount = isLiked ? (post.like_count || 1) - 1 : (post.like_count || 0) + 1;
+            console.log('Post like count updated:', post.like_count, '->', newCount);
+            return {
+              ...post,
+              like_count: newCount
+            };
+          }
+          return post;
+        });
       });
     } catch (err) {
       console.error('Error liking post:', err);

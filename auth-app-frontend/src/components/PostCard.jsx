@@ -44,14 +44,16 @@ const PostCard = ({
             <button 
               onClick={() => onEditPost(post.id)}
               className="edit-btn"
+              title="Edit post"
             >
-              Edit
+              ✏️
             </button>
             <button 
               onClick={() => onDeletePost(post.id)}
               className="delete-btn"
+              title="Delete post"
             >
-              Delete
+              🗑️
             </button>
           </div>
         )}
@@ -81,18 +83,26 @@ const PostCard = ({
       
       <div className="post-actions-bottom">
         <div className="post-actions-left">
-                     <button 
-             onClick={() => onLikePost(post.id)}
-             className={`like-btn ${isLiked ? 'liked' : ''}`}
-           >
-             {isLiked ? '❤️' : '🤍'} Like
-           </button>
-          <button 
-            onClick={() => onLoadComments(post.id)}
-            className="comment-btn"
-          >
-            💬 Comments
-          </button>
+          <div className="action-item">
+            <button 
+              onClick={() => onLikePost(post.id)}
+              className={`like-btn ${isLiked ? 'liked' : ''}`}
+              title={isLiked ? 'Unlike' : 'Like'}
+            >
+              {isLiked ? '❤️' : '🤍'}
+            </button>
+            <span className="action-count">{post.like_count || 0}</span>
+          </div>
+          <div className="action-item">
+            <button 
+              onClick={() => onLoadComments(post.id)}
+              className="comment-btn"
+              title="View comments"
+            >
+              💬
+            </button>
+            <span className="action-count">{post.comment_count || 0}</span>
+          </div>
         </div>
         <span className="post-date">{formatDate(post.created_at)}</span>
       </div>

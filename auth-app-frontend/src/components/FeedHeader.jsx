@@ -18,32 +18,36 @@ const FeedHeader = ({
             </button>
             <h1>{viewingUserPosts.username}'s Posts</h1>
           </div>
-          <div className="user-info">
-            <button onClick={onLogout} className="logout-btn">
-              Logout
+          <div className="header-actions">
+            <button onClick={onLogout} className="logout-btn" title="Logout">
+              ⏻
             </button>
           </div>
         </>
       ) : (
         <>
-          <h1>chatr Feed</h1>
-          <div className="user-info">
-            <span>
-              Welcome,{' '}
-              <span 
-                className="current-user clickable"
-                onClick={() => onUserClick(user?.id)}
-                title="Click to view your profile"
-              >
-                {user?.username}
+          <div className="header-left">
+            <h1>chatr Feed</h1>
+            <div className="welcome-message">
+              <span>
+                Welcome,{' '}
+                <span 
+                  className="current-user clickable"
+                  onClick={() => onUserClick(user?.id)}
+                  title="Click to view your profile"
+                >
+                  {user?.username}
+                </span>
+                !
               </span>
-              !
-            </span>
-            <button onClick={onCreatePost} className="create-post-btn">
-              Create Post
+            </div>
+          </div>
+          <div className="header-actions">
+            <button onClick={onCreatePost} className="create-post-btn" title="Create new post">
+              ✏️
             </button>
-            <button onClick={onLogout} className="logout-btn">
-              Logout
+            <button onClick={onLogout} className="logout-btn" title="Logout">
+              ⏻
             </button>
           </div>
         </>
