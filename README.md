@@ -1,6 +1,6 @@
 # chatr
 
-A fullstack authentication application with a FastAPI backend and a React (Vite) frontend. Supports user registration, login, JWT-based authentication, profile viewing, and social features like posts, comments, and likes.
+A fullstack application with a FastAPI backend and a React (Vite) frontend. Supports user registration, login, JWT-based authentication, profile viewing, and social features like posts, comments, and likes.
 
 ---
 
