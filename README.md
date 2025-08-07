@@ -2,6 +2,12 @@
 
 A fullstack application with a FastAPI backend and a React (Vite) frontend. Supports user registration, login, JWT-based authentication, profile viewing, and social features like posts, comments, and likes.
 
+## 🌐 Live Demo
+
+**Live Application:** [https://basic-user.onrender.com/](https://basic-user.onrender.com/)
+
+*Experience the full application with user registration, authentication, and social features.*
+
 ---
 
 ## Features
@@ -19,22 +25,22 @@ A fullstack application with a FastAPI backend and a React (Vite) frontend. Supp
 ```
 auth-app-fastapi/
   ├── app/                    # FastAPI backend
-  │   ├── main.py            # FastAPI application entry point
-  │   ├── models.py          # SQLAlchemy models (User, Post, Comment, Like)
-  │   ├── schema.py          # Pydantic schemas
-  │   ├── routes.py          # API endpoints
-  │   ├── auth.py            # Authentication utilities
-  │   ├── database.py        # Database configuration
-  │   ├── service.py         # Business logic
-  │   └── test.py            # Test suite
+  │   ├── main.py             # FastAPI application entry point
+  │   ├── models.py           # SQLAlchemy models (User, Post, Comment, Like)
+  │   ├── schema.py           # Pydantic schemas
+  │   ├── routes.py           # API endpoints
+  │   ├── auth.py             # Authentication utilities
+  │   ├── database.py         # Database configuration
+  │   ├── service.py          # Business logic
+  │   └── test.py             # Test suite
   ├── auth-app-frontend/      # React frontend
   ├── migrations/             # Database migrations (Alembic)
   ├── requirements.txt        # Python dependencies
   ├── manage_migrations.py    # Migration management script
-  ├── reset_database.py      # Database reset utility
-  ├── alembic.ini           # Alembic configuration
-  ├── users.db              # SQLite database
-  └── README.md             # This file
+  ├── reset_database.py       # Database reset utility
+  ├── alembic.ini             # Alembic configuration
+  ├── users.db                # SQLite database
+  └── README.md               # This file
 ```
 
 ---
@@ -82,13 +88,6 @@ auth-app-fastapi/
 - **Check current:** `python manage_migrations.py current`
 - **View history:** `python manage_migrations.py history`
 
-### Reset Database
-⚠️ **Warning: This will delete all data!**
-```bash
-python reset_database.py
-```
-
----
 
 ## Frontend Setup (React)
 
