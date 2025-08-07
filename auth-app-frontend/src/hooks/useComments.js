@@ -16,7 +16,17 @@ export const useComments = (token) => {
         [postId]: commentsData
       }));
     } catch (err) {
-      setError('Failed to load comments');
+      // If the post doesn't exist, remove it from comments state
+      if (err.message.includes('Resource not found')) {
+        setComments(prev => {
+          const newComments = { ...prev };
+          delete newComments[postId];
+          return newComments;
+        });
+        setError('Post not found. It may have been deleted.');
+      } else {
+        setError('Failed to load comments');
+      }
     } finally {
       setLoading(false);
     }
@@ -40,7 +50,17 @@ export const useComments = (token) => {
         [postId]: ''
       }));
     } catch (err) {
-      setError(err.message);
+      // If the post doesn't exist, remove it from comments state
+      if (err.message.includes('Resource not found')) {
+        setComments(prev => {
+          const newComments = { ...prev };
+          delete newComments[postId];
+          return newComments;
+        });
+        setError('Post not found. It may have been deleted.');
+      } else {
+        setError(err.message);
+      }
       throw err;
     } finally {
       setLoading(false);

@@ -22,6 +22,10 @@ class UserResponse(UserBase):
 class TokenResponse(BaseModel):
     user: UserResponse
     token: str
+    refresh_token : str
+
+class RequestTokenResponse(BaseModel):
+    refresh_token : str
 
 # Post schema
 class PostBase(BaseModel):

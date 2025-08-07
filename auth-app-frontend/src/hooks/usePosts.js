@@ -51,6 +51,10 @@ export const usePosts = (token) => {
       );
       return updatedPost;
     } catch (err) {
+      // If we get a 404, the post might have been deleted, refresh the list
+      if (err.message.includes('Resource not found')) {
+        await loadPosts();
+      }
       setError(err.message);
       throw err;
     } finally {
@@ -61,9 +65,26 @@ export const usePosts = (token) => {
   const handleDeletePost = async (postId) => {
     try {
       setLoading(true);
-      await deletePost(postId, token);
+      // Store the current posts state in case we need to revert
+      const currentPosts = [...posts];
+      
+      // Optimistically remove the post from UI
       setPosts(prevPosts => prevPosts.filter(post => post.id !== postId));
+      
+      // Attempt to delete from backend
+      await deletePost(postId, token);
+      
+      // If successful, the optimistic update remains
+      // If it fails, the error will be caught and handled
     } catch (err) {
+      // If deletion fails, revert the optimistic update
+      setPosts(currentPosts);
+      
+      // If we get a 404, the post might have already been deleted, refresh the list
+      if (err.message.includes('Resource not found')) {
+        await loadPosts();
+      }
+      
       setError(err.message);
       throw err;
     } finally {
@@ -73,18 +94,44 @@ export const usePosts = (token) => {
 
   const handleLikePost = async (postId) => {
     try {
-      if (likedPosts.has(postId)) {
-        await unlikePost(postId, token);
+      const isCurrentlyLiked = likedPosts.has(postId);
+      
+      // Optimistically update the UI
+      if (isCurrentlyLiked) {
         setLikedPosts(prev => {
           const newSet = new Set(prev);
           newSet.delete(postId);
           return newSet;
         });
       } else {
-        await likePost(postId, token);
         setLikedPosts(prev => new Set([...prev, postId]));
       }
+      
+      // Make the API call
+      if (isCurrentlyLiked) {
+        await unlikePost(postId, token);
+      } else {
+        await likePost(postId, token);
+      }
+      
+      // If successful, the optimistic update remains
     } catch (err) {
+      // If the API call fails, revert the optimistic update
+      if (isCurrentlyLiked) {
+        setLikedPosts(prev => new Set([...prev, postId]));
+      } else {
+        setLikedPosts(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(postId);
+          return newSet;
+        });
+      }
+      
+      // If we get a 404, the post might have been deleted, refresh the list
+      if (err.message.includes('Resource not found')) {
+        await loadPosts();
+      }
+      
       setError(err.message);
       throw err;
     }

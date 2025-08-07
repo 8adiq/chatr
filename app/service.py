@@ -1,5 +1,7 @@
 from sqlalchemy.orm import Session, joinedload
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status,Depends
+from fastapi.security import HTTPAuthorizationCredentials,HTTPBearer
+from jose import jwt, JWTError
 from .models import User, Post, Comment, Like
 from .schema import UserCreate, UserLogin, PostCreate, PostBase, CommentBase
 from .auth import hash_password, verify_password

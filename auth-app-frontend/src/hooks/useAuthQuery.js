@@ -8,11 +8,11 @@ export const authKeys = {
   user: (token) => [...authKeys.all, 'user', token],
 };
 
-export const useProfile = (token) => {
+export const useProfile = (tokenManager) => {
   return useQuery({
     queryKey: authKeys.profile(),
-    queryFn: () => getProfile(token),
-    enabled: !!token,
+    queryFn: () => getProfile(tokenManager),
+    enabled: !!tokenManager?.accessToken,
     staleTime: 10 * 60 * 1000, // 10 minutes
     retry: false,
   });
@@ -48,11 +48,11 @@ export const useRegister = () => {
   });
 };
 
-export const useUserLikes = (token) => {
+export const useUserLikes = (tokenManager) => {
   return useQuery({
     queryKey: ['userLikes'],
-    queryFn: () => getUserLikes(token),
-    enabled: !!token,
+    queryFn: () => getUserLikes(tokenManager),
+    enabled: !!tokenManager?.accessToken,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }; 

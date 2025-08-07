@@ -5,6 +5,7 @@ import { getUserById, getComments } from './api';
 import { usePosts, useCreatePost, useUpdatePost, useDeletePost, useLikePost } from './hooks/usePostsQuery';
 import { useComments, useCreateComment } from './hooks/useCommentsQuery';
 import { useProfile, useLogin, useRegister, useUserLikes } from './hooks/useAuthQuery';
+import { useTokenManager } from './hooks/useTokenManager';
 import { formatDate, getRandomAvatar } from './utils/helpers';
 import AuthForm from './components/AuthForm';
 import Feed from './components/Feed';
@@ -43,16 +44,23 @@ function AppContent() {
   const [loadedComments, setLoadedComments] = useState({});
   const [likedPosts, setLikedPosts] = useState(new Set());
   
-  // Authentication state
-  const [token, setToken] = useState(() => localStorage.getItem('token') || '');
+  // Token management
+  const { 
+    accessToken, 
+    updateTokens, 
+    clearTokens, 
+    refreshAccessToken 
+  } = useTokenManager();
+  
+  // User state
   const [user, setUser] = useState(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
   // React Query hooks
   const { data: postsData, isLoading: postsLoading, error: postsError } = usePosts();
-  const { data: profileData, isLoading: profileLoading } = useProfile(token);
-  const { data: userLikesData } = useUserLikes(token);
+  const { data: profileData, isLoading: profileLoading } = useProfile({ accessToken, getValidAccessToken: refreshAccessToken });
+  const { data: userLikesData } = useUserLikes({ accessToken, getValidAccessToken: refreshAccessToken });
   
   // Filter posts when viewing a specific user's posts
   const filteredPosts = viewingUserPosts 
@@ -85,9 +93,9 @@ function AppContent() {
 
   // Handle authentication success
   const handleAuthSuccess = (data) => {
-    setToken(data.token);
-    localStorage.setItem('token', data.token);
+    updateTokens(data.token, data.refresh_token);
     setUser(data.user);
+    setMode('feed');
   };
 
   const clearMessages = () => {
@@ -122,10 +130,8 @@ function AppContent() {
   };
 
   const handleLogout = () => {
-    setToken('');
+    clearTokens();
     setUser(null);
-    localStorage.removeItem('token');
-    setForm({ username: '', email: '', password: '' });
     setMode('login');
     setEditingPost(null);
     setNewPost({ text: '' });
@@ -140,7 +146,7 @@ function AppContent() {
     if (!newPost.text.trim()) return;
     
     try {
-      await createPostMutation.mutateAsync({ postData: newPost, token: token });
+      await createPostMutation.mutateAsync({ postData: newPost, tokenManager: { accessToken, getValidAccessToken: refreshAccessToken } });
       setNewPost({ text: '' });
       setMode('feed');
     } catch (err) {
@@ -150,7 +156,7 @@ function AppContent() {
 
   const handleUpdatePost = async (postId, text) => {
     try {
-      await updatePostMutation.mutateAsync({ postId, text, token: token });
+      await updatePostMutation.mutateAsync({ postId, text, tokenManager: { accessToken, getValidAccessToken: refreshAccessToken } });
       setEditingPost(null);
     } catch (err) {
       // Error is handled by React Query
@@ -159,7 +165,7 @@ function AppContent() {
 
   const handleDeletePost = async (postId) => {
     try {
-      await deletePostMutation.mutateAsync({ postId, token: token });
+      await deletePostMutation.mutateAsync({ postId, tokenManager: { accessToken, getValidAccessToken: refreshAccessToken } });
     } catch (err) {
       // Error is handled by React Query
     }
@@ -173,7 +179,7 @@ function AppContent() {
       const newCommentData = await createCommentMutation.mutateAsync({ 
         postId, 
         commentData: { text: commentText }, 
-        token: token 
+        tokenManager: { accessToken, getValidAccessToken: refreshAccessToken } 
       });
       
       // Clear the comment input
@@ -213,7 +219,7 @@ function AppContent() {
     try {
       const isLiked = likedPosts.has(postId);
       
-      await likePostMutation.mutateAsync({ postId, token: token, isLiked });
+              await likePostMutation.mutateAsync({ postId, tokenManager: { accessToken, getValidAccessToken: refreshAccessToken }, isLiked });
       
       // Update local like state
       setLikedPosts(prev => {
@@ -305,7 +311,7 @@ function AppContent() {
   };
 
   // If not authenticated, show auth form
-  if (!token) {
+  if (!accessToken) {
     return (
       <AuthForm
         mode={mode}

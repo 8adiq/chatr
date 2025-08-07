@@ -23,8 +23,8 @@ export const useCreateComment = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: ({ postId, commentData, token }) => 
-      createComment(postId, commentData, token),
+    mutationFn: ({ postId, commentData, tokenManager }) => 
+      createComment(postId, commentData, tokenManager),
     onSuccess: (newComment, { postId }) => {
       // Add the new comment to the cache
       queryClient.setQueryData(commentKeys.list(postId), (oldData) => {

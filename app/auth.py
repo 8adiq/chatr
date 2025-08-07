@@ -1,7 +1,7 @@
 from datetime import datetime,timedelta
 from jose import jwt, JWTError
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from fastapi import HTTPException, Depends
+from fastapi import HTTPException, Depends,status
 from sqlalchemy.orm import Session
 from dotenv import load_dotenv
 from .models import User,Post
@@ -15,7 +15,8 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 if not SECRET_KEY:
     raise RuntimeError("SECRET_KEY environment variable is not set.")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRES_MINUTES = 30
+ACCESS_TOKEN_EXPIRES_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRES_MINUTES"))
+ACCESS_TOKEN_EXPIRES_DAYS = int(os.getenv("ACCESS_TOKEN_EXPIRES_DAYS"))
 
 
 security = HTTPBearer()
@@ -30,24 +31,48 @@ def verify_password(password: str, hashed_password: str) -> bool:
     """verify password against hashed password"""
     return bcrypt.checkpw(password.encode("utf-8"), hashed_password.encode("utf-8"))
 
-def create_token(data:dict):
-    """generates jwt token"""
+def create_access_token(data:dict) -> str:
+    """generates jwt access token"""
 
     to_encode = data.copy()
     expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRES_MINUTES)
 
-    to_encode.update({'exp':expire})
+    to_encode.update({'exp':expire, 'type':'access'})
     encoded_jwt = jwt.encode(to_encode,SECRET_KEY,algorithm=ALGORITHM)
 
     return encoded_jwt
 
+def create_refresh_token(data:dict) -> str :
+    """generates jwt access token"""
+
+    to_encode = data.copy()
+    expire = datetime.utcnow() + timedelta(days=ACCESS_TOKEN_EXPIRES_DAYS)
+
+    to_encode.update({'exp': expire, 'type': 'refresh'})
+    encoded_jwt = jwt.encode(to_encode,SECRET_KEY,algorithm=ALGORITHM)
+
+    return encoded_jwt
+
+def verify_token(token : str, token_type : str = 'access'):
+
+    try:
+        payload = jwt.decode(token,SECRET_KEY,algorithms=ALGORITHM)
+        email = payload.get('sub')
+        token_type_check = payload.get('type')
+
+        if email is None or token_type_check != token_type:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="Token invalid or expired.")
+        return payload
+    except JWTError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="Token invalid or expired.")
+
+
 def get_user_details(credentials: HTTPAuthorizationCredentials = Depends(security),
                       db: Session = Depends(get_db_session)):
-    """get authenticated user"""
+    """get authenticated user's details"""
     try:
-        payload = jwt.decode(credentials.credentials, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = verify_token(credentials.credentials,"access")
         email = payload.get('sub')
-        exp = payload.get('exp')
 
         if email is None:
             raise HTTPException(status_code=401, detail='Invalid Token')

@@ -29,7 +29,7 @@ export const useCreatePost = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: ({ postData, token }) => createPost(postData, token),
+    mutationFn: ({ postData, tokenManager }) => createPost(postData, tokenManager),
     onSuccess: (newPost) => {
       // Optimistically update the cache
       queryClient.setQueryData(postKeys.lists(), (oldData) => {
@@ -46,7 +46,7 @@ export const useUpdatePost = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: ({ postId, text, token }) => updatePost(postId, { text }, token),
+    mutationFn: ({ postId, text, tokenManager }) => updatePost(postId, { text }, tokenManager),
     onSuccess: (updatedPost) => {
       // Update the cache with the new data
       queryClient.setQueryData(postKeys.lists(), (oldData) => {
@@ -65,15 +65,36 @@ export const useDeletePost = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: ({ postId, token }) => deletePost(postId, token),
-    onSuccess: (_, { postId }) => {
-      // Remove the post from cache
+    mutationFn: ({ postId, tokenManager }) => deletePost(postId, tokenManager),
+    onMutate: async ({ postId }) => {
+      // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
+      await queryClient.cancelQueries({ queryKey: postKeys.lists() });
+      
+      // Snapshot the previous value
+      const previousPosts = queryClient.getQueryData(postKeys.lists());
+      
+      // Optimistically update to the new value
       queryClient.setQueryData(postKeys.lists(), (oldData) => {
         return oldData?.filter(post => post.id !== postId) || [];
       });
+      
+      // Return a context object with the snapshotted value
+      return { previousPosts };
     },
-    onError: (error) => {
-      console.error('Failed to delete post:', error);
+    onError: (err, { postId }, context) => {
+      // Only log error if it's not a 404 (post already deleted)
+      if (!err.message.includes('Resource not found')) {
+        console.error('Failed to delete post:', err);
+      }
+      
+      // If the mutation fails, use the context returned from onMutate to roll back
+      if (context?.previousPosts) {
+        queryClient.setQueryData(postKeys.lists(), context.previousPosts);
+      }
+    },
+    onSettled: () => {
+      // Always refetch after error or success to ensure cache consistency
+      queryClient.invalidateQueries({ queryKey: postKeys.lists() });
     },
   });
 };
@@ -82,8 +103,8 @@ export const useLikePost = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: ({ postId, token, isLiked }) => 
-      isLiked ? unlikePost(postId, token) : likePost(postId, token),
+    mutationFn: ({ postId, tokenManager, isLiked }) => 
+      isLiked ? unlikePost(postId, tokenManager) : likePost(postId, tokenManager),
     onSuccess: (_, { postId, isLiked }) => {
       // Update the cache to reflect the like status
       queryClient.setQueryData(postKeys.lists(), (oldData) => {

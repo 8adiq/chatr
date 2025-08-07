@@ -11,8 +11,8 @@ const AuthForm = ({
   onModeChange
 }) => {
   return (
-    <div className="auth-container">
-      <h1>Welcome to chatr</h1>
+    <div className="auth-container card">
+      <h1 className="font-bold text-2xl mb-6 text-center">Welcome to chatr</h1>
       {loading && <p className="loading">Loading...</p>}
       {error && <p className="error">{error}</p>}
       {success && <p className="success">{success}</p>}
@@ -25,6 +25,7 @@ const AuthForm = ({
             value={form.username}
             onChange={onFormChange}
             required
+            className="input"
           />
         )}
         <input
@@ -34,6 +35,7 @@ const AuthForm = ({
           value={form.email}
           onChange={onFormChange}
           required
+          className="input"
         />
         <input
           name="password"
@@ -42,8 +44,9 @@ const AuthForm = ({
           value={form.password}
           onChange={onFormChange}
           required
+          className="input"
         />
-        <button type="submit" disabled={loading}>
+        <button type="submit" disabled={loading} className="btn btn-primary w-full">
           {mode === 'login' ? 'Login' : 'Register'}
         </button>
       </form>
@@ -51,15 +54,15 @@ const AuthForm = ({
       <div className="switch-mode">
         {mode === 'login' ? (
           <>
-            <span>Don't have an account?</span>
-            <button onClick={() => onModeChange('register')}>
+            <span className="text-secondary">Don't have an account?</span>
+            <button onClick={() => onModeChange('register')} className="btn btn-ghost">
               Register
             </button>
           </>
         ) : (
           <>
-            <span>Already have an account?</span>
-            <button onClick={() => onModeChange('login')}>
+            <span className="text-secondary">Already have an account?</span>
+            <button onClick={() => onModeChange('login')} className="btn btn-ghost">
               Login
             </button>
           </>

@@ -12,7 +12,7 @@ const UserModal = ({
     <div className="modal-overlay" onClick={onClose}>
       <div className="user-modal" onClick={(e) => e.stopPropagation()}>
         <header className="user-modal-header">
-          <h2>User Details</h2>
+          <h2 className="font-semibold">User Details</h2>
           <button onClick={onClose} className="close-btn">
             ✕
           </button>
@@ -39,8 +39,8 @@ const UserModal = ({
           </div>
           
           <div className="user-info-modal">
-            <h3>{selectedUser.username}</h3>
-            <p className="user-email">{selectedUser.email}</p>
+            <h3 className="font-bold">{selectedUser.username}</h3>
+            <p className="user-email text-secondary">{selectedUser.email}</p>
           </div>
           
           <div className="user-stats">
