@@ -15,7 +15,7 @@ async function handleResponse(response) {
     } else if (response.status === 403) {
       throw new Error('You do not have permission to perform this action.');
     } else if (response.status === 401) {
-      throw new Error('Authentication required. Please log in again.');
+      throw new Error('Invalid credentials. Please try again.');
     } else if (response.status === 400) {
       throw new Error(errorMessage || 'Invalid request. Please check your input.');
     } else {
