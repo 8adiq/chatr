@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import func
 from fastapi import HTTPException, status,Depends
 from fastapi.security import HTTPAuthorizationCredentials,HTTPBearer
 from jose import jwt, JWTError
@@ -15,7 +16,7 @@ class UserService:
 
     def check_email_exists(self, email: str) -> bool:
         """Check if email already exists in database"""
-        return self.db.query(User).filter(User.email == email).first() is not None
+        return self.db.query(User).filter(func.lower(User.email) == email.lower()).first() is not None
 
     def check_username_exists(self, username: str) -> bool:
         """Check if username already exists in database"""
@@ -32,7 +33,7 @@ class UserService:
     def create_user(self, user_data: UserCreate) -> User:
         """Create a new user with validation"""
         # Check if email already exists
-        if self.check_email_exists(user_data.email):
+        if self.check_email_exists(user_data.email.lower()):
             raise HTTPException(status_code=400, detail="Email already registered")
         
         # Check if username already exists
@@ -56,7 +57,7 @@ class UserService:
 
     def authenticate_user(self, user_data: UserLogin) -> User:
         """Authenticate user login"""
-        user = self.db.query(User).filter(User.email == user_data.email).first()
+        user = self.db.query(User).filter(func.lower(User.email) == user_data.email.lower()).first()
 
         if not user or not verify_password(user_data.password, user.hashed_password):
             raise HTTPException(status_code=401, detail="Invalid credentials")
@@ -65,7 +66,7 @@ class UserService:
 
     def get_user_by_email(self, email: str) -> User:
         """Get user by email"""
-        return self.db.query(User).filter(User.email == email).first()
+        return self.db.query(User).filter(func.lower(User.email) == email.lower()).first()
 
     def get_user_by_id(self, user_id: str) -> User:
         """Get user by ID"""
