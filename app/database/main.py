@@ -6,14 +6,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-#  postgres db setup
+# db setup
 DATABASE_URL = os.getenv("DATABASE_URL")
-engine = create_engine(
-        DATABASE_URL,
-        pool_pre_ping=True,  # Verify connections before use
-        pool_recycle=300,    # Recycle connections every 5 minutes
-        echo=False           # Set to True for SQL debugging
-    )
+
+engine = create_engine(DATABASE_URL)
 session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()

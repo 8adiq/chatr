@@ -197,11 +197,11 @@ function AppContent() {
       // Update post comment count
       queryClient.setQueryData(['posts', 'list'], (oldData) => {
         if (!oldData) return oldData;
-        console.log('Updating comment count for post:', postId);
+        // Updating comment count for post
         return oldData.map(post => {
           if (post.id === postId) {
             const newCount = (post.comment_count || 0) + 1;
-            console.log('Post comment count updated:', post.comment_count, '->', newCount);
+            // Post comment count updated
             return {
               ...post,
               comment_count: newCount
@@ -235,11 +235,11 @@ function AppContent() {
       // Update post like count
       queryClient.setQueryData(['posts', 'list'], (oldData) => {
         if (!oldData) return oldData;
-        console.log('Updating like count for post:', postId, 'isLiked:', isLiked);
+        // Updating like count for post
         return oldData.map(post => {
           if (post.id === postId) {
             const newCount = isLiked ? (post.like_count || 1) - 1 : (post.like_count || 0) + 1;
-            console.log('Post like count updated:', post.like_count, '->', newCount);
+            // Post like count updated
             return {
               ...post,
               like_count: newCount

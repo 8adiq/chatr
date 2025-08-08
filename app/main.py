@@ -6,8 +6,7 @@ from fastapi.exceptions import RequestValidationError
 from sqlalchemy.exc import SQLAlchemyError
 import os
 import logging
-from .routes import router
-from .database import init_db
+from app.database.main import init_db
 
 # setting up logging
 logging.basicConfig(level=logging.INFO)
@@ -61,7 +60,21 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-app.include_router(router,prefix='/api')
+# Include modular routers
+from app.users.routes import router as users_router
+from app.posts.routes import router as posts_router
+from app.comments.routes import router as comments_router
+from app.likes.routes import router as likes_router
+
+app.include_router(users_router, prefix='/api', tags=['users'])
+app.include_router(posts_router, prefix='/api', tags=['posts'])
+app.include_router(comments_router, prefix='/api', tags=['comments'])
+app.include_router(likes_router, prefix='/api', tags=['likes'])
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for monitoring"""
+    return {"status": "healthy", "timestamp": "2024-01-01T00:00:00Z"}
 
 @app.on_event("startup")
 async def startup():
@@ -72,4 +85,4 @@ app.mount("/", StaticFiles(directory="auth-app-frontend/dist", html=True), name=
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True) 

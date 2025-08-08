@@ -4,8 +4,9 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi import HTTPException, Depends,status
 from sqlalchemy.orm import Session
 from dotenv import load_dotenv
-from .models import User,Post
-from .database import get_db_session
+from app.users.models import User
+from app.posts.models import  Post
+from app.database.main import get_db_session
 import os
 import bcrypt
 
