@@ -11,9 +11,11 @@ const AuthForm = ({
   onModeChange
 }) => {
   return (
-    <div className="auth-container card">
-      <h1 className="font-bold text-2xl mb-6 text-center">Welcome to chatr</h1>
-      {loading && <p className="loading">Loading...</p>}
+    <div className="auth-container card fade-in">
+      <h1 className="font-extrabold text-3xl mb-8 text-center">
+        Welcome to <span style={{ background: 'var(--accent-gradient)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>chatr</span>
+      </h1>
+      {loading && <p className="loading">Loading<span className="loading-dots"></span></p>}
       {error && <p className="error">{error}</p>}
       {success && <p className="success">{success}</p>}
       
@@ -46,8 +48,8 @@ const AuthForm = ({
           required
           className="input"
         />
-        <button type="submit" disabled={loading} className="btn btn-primary w-full">
-          {mode === 'login' ? 'Login' : 'Register'}
+        <button type="submit" disabled={loading} className="btn btn-primary w-full hover-lift">
+          {mode === 'login' ? 'Sign In' : 'Create Account'}
         </button>
       </form>
       
@@ -56,14 +58,14 @@ const AuthForm = ({
           <>
             <span className="text-secondary">Don't have an account?</span>
             <button onClick={() => onModeChange('register')} className="btn btn-ghost">
-              Register
+              Sign Up
             </button>
           </>
         ) : (
           <>
             <span className="text-secondary">Already have an account?</span>
             <button onClick={() => onModeChange('login')} className="btn btn-ghost">
-              Login
+              Sign In
             </button>
           </>
         )}
