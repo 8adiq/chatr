@@ -81,7 +81,7 @@ async def startup():
     """ initializing database on startup"""
     init_db()
 
-app.mount("/", StaticFiles(directory="auth-app-frontend/dist", html=True), name="static")
+# app.mount("/", StaticFiles(directory="auth-app-frontend/dist", html=True), name="static")
 
 if __name__ == "__main__":
     import uvicorn
