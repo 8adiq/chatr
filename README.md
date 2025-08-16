@@ -1,120 +1,238 @@
-# chatr
+# Chatr - Full Stack Social Media Application
 
-A fullstack application with a FastAPI backend and a React (Vite) frontend. Supports user registration, login, JWT-based authentication, profile viewing, and social features like posts, comments, and likes.
+A modern full-stack social media application built with FastAPI (backend) and React (frontend), fully containerized with Docker and deployed on Render. Features user authentication, social interactions, and a responsive modern UI.
 
 ## 🌐 Live Demo
 
-**Live Application:** [https://basic-user.onrender.com/](https://basic-user.onrender.com/)
+**Frontend:** [https://auth-app-frontend-rh30.onrender.com](https://auth-app-frontend-rh30.onrender.com)  
+**Backend API:** [https://auth-app-backend-udya.onrender.com](https://auth-app-backend-udya.onrender.com)  
+**API Documentation:** [https://auth-app-backend-udya.onrender.com/docs](https://auth-app-backend-udya.onrender.com/docs)
 
 *Experience the full application with user registration, authentication, and social features.*
 
 ---
 
-## Features
-- User registration with email, username, and password
-- User login with JWT token authentication
-- Profile endpoint (protected)
-- Social features: posts, comments, and likes
-- Passwords securely hashed (bcrypt)
-- CORS enabled for frontend-backend communication
-- Modern React frontend (Vite)
+## ✨ Features
+
+### Core Features
+- **User Authentication**: Registration and login with JWT tokens
+- **Social Features**: Posts, comments, and likes system
+- **User Profiles**: Protected profile endpoints
+- **Modern UI**: Responsive React frontend with Vite
+
+### Technical Features
+- **Containerized**: Full Docker support for development and production
+- **Database Migrations**: Alembic-based migration system
+- **CORS Enabled**: Cross-origin communication between services
+- **Production Ready**: Deployed on Render with PostgreSQL
+- **Health Checks**: Built-in monitoring endpoints
+- **Security**: Password hashing with bcrypt, JWT authentication
 
 ---
 
-## Project Structure
+## 🏗️ Architecture
+
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Frontend      │    │   Backend       │    │   Database      │
+│   (React)       │◄──►│   (FastAPI)     │◄──►│   (PostgreSQL)  │
+│   Container     │    │   Container     │    │   (Render)      │
+│   Nginx         │    │   Uvicorn       │    │                 │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+```
+
+---
+
+## 📁 Project Structure
+
 ```
 auth-app-fastapi/
-  ├── app/                    # FastAPI backend
-  │   ├── main.py             # FastAPI application entry point
-  │   ├── models.py           # SQLAlchemy models (User, Post, Comment, Like)
-  │   ├── schema.py           # Pydantic schemas
-  │   ├── routes.py           # API endpoints
-  │   ├── auth.py             # Authentication utilities
-  │   ├── database.py         # Database configuration
-  │   ├── service.py          # Business logic
-  │   └── test.py             # Test suite
-  ├── auth-app-frontend/      # React frontend
-  ├── migrations/             # Database migrations (Alembic)
-  ├── requirements.txt        # Python dependencies
-  ├── manage_migrations.py    # Migration management script
-  ├── reset_database.py       # Database reset utility
-  ├── alembic.ini             # Alembic configuration
-  ├── users.db                # SQLite database
-  └── README.md               # This file
+├── app/                          # FastAPI backend application
+│   ├── __init__.py
+│   ├── main.py                   # FastAPI app entry point
+│   ├── database/
+│   │   ├── __init__.py
+│   │   └── main.py              # Database configuration
+│   ├── users/                    # User management module
+│   │   ├── __init__.py
+│   │   ├── models.py            # User SQLAlchemy model
+│   │   ├── routes.py            # User API endpoints
+│   │   ├── schema.py            # User Pydantic schemas
+│   │   └── service.py           # User business logic
+│   ├── posts/                    # Posts module
+│   │   ├── __init__.py
+│   │   ├── models.py            # Post SQLAlchemy model
+│   │   ├── routes.py            # Post API endpoints
+│   │   ├── schema.py            # Post Pydantic schemas
+│   │   └── service.py           # Post business logic
+│   ├── comments/                 # Comments module
+│   │   ├── __init__.py
+│   │   ├── models.py            # Comment SQLAlchemy model
+│   │   ├── routes.py            # Comment API endpoints
+│   │   ├── schema.py            # Comment Pydantic schemas
+│   │   └── service.py           # Comment business logic
+│   ├── likes/                    # Likes module
+│   │   ├── __init__.py
+│   │   ├── models.py            # Like SQLAlchemy model
+│   │   ├── routes.py            # Like API endpoints
+│   │   ├── schema.py            # Like Pydantic schemas
+│   │   └── service.py           # Like business logic
+│   └── auth/                     # Authentication module
+│       ├── __init__.py
+│       ├── routes.py            # Auth API endpoints
+│       ├── schema.py            # Auth Pydantic schemas
+│       └── service.py           # Auth business logic
+├── auth-app-frontend/            # React frontend application
+│   ├── public/
+│   ├── src/
+│   │   ├── components/          # React components
+│   │   ├── hooks/              # Custom React hooks
+│   │   ├── lib/                # Utility libraries
+│   │   ├── utils/              # Helper functions
+│   │   ├── api.js              # API client configuration
+│   │   ├── App.jsx             # Main React component
+│   │   └── main.jsx            # React entry point
+│   ├── Dockerfile              # Frontend Docker configuration
+│   ├── nginx.conf              # Nginx configuration
+│   ├── package.json            # Node.js dependencies
+│   └── vite.config.js          # Vite configuration
+├── migrations/                  # Database migrations
+│   ├── env.py
+│   ├── script.py.mako
+│   └── versions/               # Migration files
+├── Dockerfile                  # Backend Docker configuration
+├── docker-compose.yaml         # Local development orchestration
+├── render.yaml                 # Production deployment blueprint
+├── requirements.txt            # Python dependencies
+├── alembic.ini                 # Alembic configuration
+├── manage_migrations.py        # Migration management script
+├── reset_database.py           # Database reset utility
+├── .dockerignore               # Docker build exclusions
+├── .gitignore                  # Git exclusions
+├── PROJECT_DOCUMENTATION.md    # Comprehensive documentation
+└── README.md                   # This file
 ```
 
 ---
 
-## Backend Setup (FastAPI)
+## 🚀 Quick Start
 
-1. **Install dependencies:**
+### Prerequisites
+- Python 3.10+
+- Node.js 18+
+- Docker & Docker Compose
+- Git
+
+### Option 1: Docker Setup (Recommended)
+
+1. **Clone the repository:**
    ```bash
-   pip install -r requirements.txt
+   git clone <repository-url>
+   cd auth-app-fastapi
    ```
 
-2. **Set environment variables:**
-   - Create a `.env` file in `app/` with:
-     ```env
-     SECRET_KEY=your_secret_key
-     DATABASE_URL=sqlite:///../users.db
-     CORS_ALLOWED_ORIGINS=http://localhost:5173
-     ```
-
-3. **Database setup:**
+2. **Create environment file:**
    ```bash
-   # Initialize migrations (first time only)
-   python manage_migrations.py init
-   
-   # Create and apply migrations
-   python manage_migrations.py migrate "Initial migration"
-   python manage_migrations.py upgrade
+   # Create .env file in root directory
+   echo "DATABASE_URL=sqlite:///users.db
+   SECRET_KEY=your-secret-key-here
+   CORS_ALLOWED_ORIGINS=http://localhost:5173
+   ACCESS_TOKEN_EXPIRES_MINUTES=30
+   ACCESS_TOKEN_EXPIRES_DAYS=7" > .env
    ```
 
-4. **Run the backend:**
+3. **Run with Docker Compose:**
    ```bash
-   uvicorn app.main:app --reload
+   docker-compose up --build
    ```
-   - The API will be available at `http://127.0.0.1:8000`
-   - Interactive docs: `http://127.0.0.1:8000/docs`
+
+4. **Access the application:**
+   - **Frontend**: http://localhost:3000
+   - **Backend API**: http://localhost:8000
+   - **API Documentation**: http://localhost:8000/docs
+
+### Option 2: Direct Setup
+
+#### Backend Setup
+```bash
+# Create virtual environment
+python -m venv fenv
+source fenv/bin/activate  # On Windows: fenv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Set environment variables
+export DATABASE_URL="sqlite:///users.db"
+export SECRET_KEY="your-secret-key-here"
+export CORS_ALLOWED_ORIGINS="http://localhost:5173"
+
+# Run migrations
+python manage_migrations.py init
+python manage_migrations.py migrate "Initial migration"
+python manage_migrations.py upgrade
+
+# Start backend
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+#### Frontend Setup
+```bash
+cd auth-app-frontend
+npm install
+npm run dev
+```
 
 ---
 
-## Database Management
+## 🐳 Docker Configuration
 
-### Migrations
-- **Create migration:** `python manage_migrations.py migrate "Description"`
-- **Apply migrations:** `python manage_migrations.py upgrade`
-- **Rollback migration:** `python manage_migrations.py downgrade`
-- **Check current:** `python manage_migrations.py current`
-- **View history:** `python manage_migrations.py history`
+### Backend Container
+- **Base Image**: Python 3.10.11-slim
+- **Server**: Uvicorn
+- **Port**: 8000
+- **Database**: PostgreSQL (production) / SQLite (development)
 
+### Frontend Container
+- **Build Stage**: Node.js 18-alpine
+- **Production Stage**: Nginx alpine
+- **Port**: 80 (mapped to 3000)
+- **Features**: Multi-stage build, static file serving, API proxying
 
-## Frontend Setup (React)
-
-1. **Install dependencies:**
-   ```bash
-   cd auth-app-frontend
-   npm install
-   ```
-
-2. **Start the frontend:**
-   ```bash
-   npm run dev
-   ```
-   - The app will run at `http://localhost:5173`
+### Docker Compose
+- **Backend Service**: FastAPI application
+- **Frontend Service**: React app with Nginx
+- **Environment**: Shared environment variables
+- **Networking**: Internal service communication
 
 ---
 
-## Usage
-- Register a new user
-- Log in with your credentials
-- View your profile after authentication
-- Create posts, add comments, and like content
-- Log out to end your session
+## ☁️ Production Deployment
+
+### Render Platform
+- **Backend**: Docker container deployment
+- **Frontend**: Static site deployment
+- **Database**: PostgreSQL hosted on Render
+- **CI/CD**: Automatic deployment from GitHub
+
+### Environment Variables (Production)
+```env
+DATABASE_URL=postgresql://user:pass@host/db
+SECRET_KEY=your-production-secret-key
+CORS_ALLOWED_ORIGINS=http://localhost:5173,https://auth-app-frontend-rh30.onrender.com
+ACCESS_TOKEN_EXPIRES_MINUTES=30
+ACCESS_TOKEN_EXPIRES_DAYS=7
+```
+
+### Deployment Process
+1. Connect GitHub repository to Render
+2. Configure environment variables
+3. Deploy using `render.yaml` blueprint
+4. Verify health checks and functionality
 
 ---
 
-## API Endpoints
+## 📚 API Documentation
 
 ### Authentication
 - `POST /api/register` — Register a new user
@@ -138,9 +256,37 @@ auth-app-fastapi/
 - `POST /api/posts/{post_id}/like` — Like/unlike a post
 - `GET /api/posts/{post_id}/likes` — Get likes for a post
 
+### Health Check
+- `GET /health` — Application health status
+
 ---
 
-## Testing
+## 🗄️ Database Management
+
+### Migration Commands
+```bash
+# Initialize migrations (first time only)
+python manage_migrations.py init
+
+# Create new migration
+python manage_migrations.py migrate "Description of changes"
+
+# Apply migrations
+python manage_migrations.py upgrade
+
+# Rollback migration
+python manage_migrations.py downgrade
+
+# Check current migration
+python manage_migrations.py current
+
+# View migration history
+python manage_migrations.py history
+```
+
+---
+
+## 🧪 Testing
 
 Run the test suite:
 ```bash
@@ -156,14 +302,76 @@ The test suite covers:
 
 ---
 
-## Notes
-- Make sure the backend is running before using the frontend
-- The frontend expects the backend at `http://127.0.0.1:8000` (update `src/api.js` if needed)
-- Passwords must be at least 6 characters
-- Database migrations are managed with Alembic
-- All social features require authentication
+## 🔧 Development
+
+### Local Development
+- Use Docker Compose for consistent environment
+- Hot reload enabled for both frontend and backend
+- SQLite database for development
+- CORS configured for localhost
+
+### Production Development
+- PostgreSQL database
+- Environment-specific configurations
+- Health checks and monitoring
+- Optimized Docker images
 
 ---
 
-## License
-MIT 
+## 📋 Best Practices
+
+### Security
+- Environment variables for sensitive data
+- Password hashing with bcrypt
+- JWT token expiration
+- CORS configuration
+- Input validation with Pydantic
+
+### Performance
+- Database indexing
+- Pagination for large datasets
+- Docker multi-stage builds
+- Nginx caching
+- Connection pooling
+
+---
+
+## 📖 Documentation
+
+For comprehensive documentation including:
+- Detailed setup instructions
+- Troubleshooting guide
+- Architecture explanations
+- Best practices
+
+See: [PROJECT_DOCUMENTATION.md](./PROJECT_DOCUMENTATION.md)
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
+---
+
+## 🆘 Support
+
+For issues and questions:
+1. Check the [PROJECT_DOCUMENTATION.md](./PROJECT_DOCUMENTATION.md)
+2. Review the troubleshooting section
+3. Check Render deployment logs
+4. Test locally with Docker Compose
+
+---
+
+*Last updated: August 2024* 
