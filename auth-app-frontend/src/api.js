@@ -1,8 +1,8 @@
 // API utility for authentication and social media features
 // Use different base URL for development vs production
-const API_BASE = import.meta.env.DEV 
-  ? 'http://localhost:8000/api' 
-  : 'https://auth-app-backend-udya.onrender.com/api';
+   const API_BASE = import.meta.env.DEV 
+     ? 'http://localhost:8000/api' 
+     : 'https://auth-app-backend-udya.onrender.com/api';
 
 // Helper function to handle API responses
 async function handleResponse(response) {
