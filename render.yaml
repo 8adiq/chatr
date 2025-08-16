@@ -13,3 +13,11 @@ services:
       - key: ACCESS_TOKEN_EXPIRES_DAYS
         value: 7
     healthCheckPath: /health
+
+  - type: web
+    name: auth-app-frontend
+    env: docker
+    dockerfilePath: ./auth-app-frontend/Dockerfile
+    envVars:
+      - key: REACT_APP_API_URL
+        value: https://auth-app-backend-udya.onrender.com
