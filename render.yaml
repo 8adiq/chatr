@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: auth-app-backend
+    env: docker
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: SECRET_KEY
+        sync: false
+      - key: ACCESS_TOKEN_EXPIRES_MINUTES
+        value: 30
+      - key: ACCESS_TOKEN_EXPIRES_DAYS
+        value: 7
+    healthCheckPath: /health
