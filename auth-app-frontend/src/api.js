@@ -15,11 +15,6 @@ const API_BASE = (() => {
   return '/api';
 })();
 
-// Debug logging
-console.log('API_BASE:', API_BASE);
-console.log('Current hostname:', window.location.hostname);
-console.log('Current port:', window.location.port);
-
 // Helper function to handle API responses
 async function handleResponse(response) {
   if (!response.ok) {

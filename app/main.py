@@ -83,10 +83,7 @@ async def health_check():
 @app.on_event("startup")
 async def startup():
     """ initializing database on startup"""
-    logger.info(f"Starting up with database URL: {settings.database_url}")
-    logger.info(f"CORS origins: {settings.cors_allowed_origins}")
     init_db()
-    logger.info("Database initialized successfully")
 
 # app.mount("/", StaticFiles(directory="auth-app-frontend/dist", html=True), name="static")
 

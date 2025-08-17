@@ -27,8 +27,11 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 load_dotenv()
 
 # Import your models and Base
-from app.database import Base
-from app.models import User, Post, Comment, Like
+from app.database.main import Base
+from app.users.models import User
+from app.posts.models import Post
+from app.comments.models import Comment
+from app.likes.models import Like
 
 target_metadata = Base.metadata
 
