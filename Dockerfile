@@ -16,14 +16,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY app/ ./app/
 COPY alembic.ini .
 COPY manage_migrations.py .
+COPY env.config ./
 
-ENV DATABASE_URL=postgresql://chatr_db_user:je1mJyMb7QehDE8V9TLEPS65pRgiy2i3@dpg-d2aj2ls9c44c738u619g-a.oregon-postgres.render.com/chatr_db
-ENV SECRET_KEY=sA3Tx14UuW9bM5YqFgx7N9yZGVVUqpqCGlTzV_4Fy1Q
-ENV CORS_ALLOWED_ORIGINS=http://localhost:5173
-ENV ACCESS_TOKEN_EXPIRES_MINUTES=30
-ENV ACCESS_TOKEN_EXPIRES_DAYS=7
 ENV PYTHONPATH=/app
-
 
 EXPOSE 8000
 

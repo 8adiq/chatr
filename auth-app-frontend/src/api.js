@@ -1,8 +1,24 @@
 // API utility for authentication and social media features
 // Use different base URL for development vs production
-   const API_BASE = import.meta.env.DEV 
-     ? 'http://localhost:8000/api' 
-     : 'https://auth-app-backend-udya.onrender.com/api';
+const API_BASE = (() => {
+  // Check if we're in development mode
+  if (import.meta.env.DEV) {
+    return 'http://localhost:8000/api';
+  }
+  
+  // Check if we're running locally (Docker or localhost)
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    return 'http://localhost:8000/api';
+  }
+  
+  // For production (Render), use relative path which will be proxied by nginx
+  return '/api';
+})();
+
+// Debug logging
+console.log('API_BASE:', API_BASE);
+console.log('Current hostname:', window.location.hostname);
+console.log('Current port:', window.location.port);
 
 // Helper function to handle API responses
 async function handleResponse(response) {
