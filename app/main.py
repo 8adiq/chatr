@@ -4,9 +4,11 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from sqlalchemy.exc import SQLAlchemyError
+from datetime import datetime
 import os
 import logging
 from app.database.main import init_db
+from app.config import settings
 
 # setting up logging
 logging.basicConfig(level=logging.INFO)
@@ -49,7 +51,7 @@ async def general_exception_handler(request:Request,exc : Exception):
         }
     )
 
-allowed_origins = os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:5173").split(",")
+allowed_origins = settings.cors_allowed_origins.split(",")
 
 # CORS middleware connecting to the frontend
 app.add_middleware(
@@ -61,11 +63,13 @@ app.add_middleware(
 )
 
 # Include modular routers
+from app.auth.routes import router as auth_router
 from app.users.routes import router as users_router
 from app.posts.routes import router as posts_router
 from app.comments.routes import router as comments_router
 from app.likes.routes import router as likes_router
 
+app.include_router(auth_router, prefix='/api', tags=['auth'])
 app.include_router(users_router, prefix='/api', tags=['users'])
 app.include_router(posts_router, prefix='/api', tags=['posts'])
 app.include_router(comments_router, prefix='/api', tags=['comments'])
@@ -74,12 +78,15 @@ app.include_router(likes_router, prefix='/api', tags=['likes'])
 @app.get("/health")
 async def health_check():
     """Health check endpoint for monitoring"""
-    return {"status": "healthy", "timestamp": "2024-01-01T00:00:00Z"}
+    return {"status": "healthy", "timestamp": datetime.utcnow().isoformat()}
 
 @app.on_event("startup")
 async def startup():
     """ initializing database on startup"""
+    logger.info(f"Starting up with database URL: {settings.database_url}")
+    logger.info(f"CORS origins: {settings.cors_allowed_origins}")
     init_db()
+    logger.info("Database initialized successfully")
 
 # app.mount("/", StaticFiles(directory="auth-app-frontend/dist", html=True), name="static")
 

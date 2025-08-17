@@ -3,21 +3,20 @@ from jose import jwt, JWTError
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi import HTTPException, Depends,status
 from sqlalchemy.orm import Session
-from dotenv import load_dotenv
 from app.users.models import User
 from app.posts.models import  Post
 from app.database.main import get_db_session
+from app.config import settings
 import os
 import bcrypt
 
-load_dotenv()
 
-SECRET_KEY = os.getenv("SECRET_KEY")
+SECRET_KEY = settings.secret_key
 if not SECRET_KEY:
     raise RuntimeError("SECRET_KEY environment variable is not set.")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRES_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRES_MINUTES"))
-ACCESS_TOKEN_EXPIRES_DAYS = int(os.getenv("ACCESS_TOKEN_EXPIRES_DAYS"))
+ACCESS_TOKEN_EXPIRES_MINUTES = int(settings.access_token_expires_minutes)
+ACCESS_TOKEN_EXPIRES_DAYS = int(settings.refresh_token_expires_days)
 
 
 security = HTTPBearer()
