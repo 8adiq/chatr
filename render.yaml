@@ -19,3 +19,7 @@ services:
     env: static
     buildCommand: cd auth-app-frontend && npm install && npm run build
     staticPublishPath: auth-app-frontend/dist
+    routes:
+      - type: rewrite
+        source: /api/*
+        destination: https://auth-app-backend-udya.onrender.com/api/*

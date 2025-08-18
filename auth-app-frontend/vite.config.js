@@ -12,9 +12,9 @@ export default defineConfig({
     // Force fresh build by adding timestamp
     rollupOptions: {
       output: {
-        entryFileNames: `assets/[name]-${Date.now()}.js`,
-        chunkFileNames: `assets/[name]-${Date.now()}.js`,
-        assetFileNames: `assets/[name]-${Date.now()}.[ext]`
+        entryFileNames: `assets/[name]-${Date.now()}-${Math.random()}.js`,
+        chunkFileNames: `assets/[name]-${Date.now()}-${Math.random()}.js`,
+        assetFileNames: `assets/[name]-${Date.now()}-${Math.random()}.[ext]`
       }
     }
   }
