@@ -13,17 +13,7 @@ class Settings(BaseSettings):
     environment: str = "local"
 
     class Config:
-        env_file = get_env_file()
-
-    @classmethod
-    def get_env_file(cls):
-        """Use single environment file for all local development"""
-        # Check if we're in Docker
-        if os.path.exists("/.dockerenv"):
-            return None  # Use environment variables passed to container
-        
-        # For local development, use the single config file
-        return "env.config"
+        env_file = "env.config"
 
 
 settings = Settings()
