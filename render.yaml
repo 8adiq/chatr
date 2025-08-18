@@ -19,6 +19,3 @@ services:
     env: static
     buildCommand: cd auth-app-frontend && npm install && npm run build
     staticPublishPath: auth-app-frontend/dist
-    envVars:
-      - key: REACT_APP_API_URL
-        value: https://auth-app-backend-udya.onrender.com

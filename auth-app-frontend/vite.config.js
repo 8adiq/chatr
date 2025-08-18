@@ -7,5 +7,15 @@ export default defineConfig({
   server: {
     port: 3000,
     host: true
+  },
+  build: {
+    // Force fresh build by adding timestamp
+    rollupOptions: {
+      output: {
+        entryFileNames: `assets/[name]-${Date.now()}.js`,
+        chunkFileNames: `assets/[name]-${Date.now()}.js`,
+        assetFileNames: `assets/[name]-${Date.now()}.[ext]`
+      }
+    }
   }
 })
