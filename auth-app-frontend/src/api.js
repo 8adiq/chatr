@@ -12,7 +12,7 @@ const API_BASE = (() => {
   }
   
   // For production (Render), use relative path which will be proxied by nginx
-  return '/api';
+  return 'https://auth-app-backend-udya.onrender.com/api';
 })();
 
 // Helper function to handle API responses
