@@ -1,38 +1,8 @@
 // API utility for authentication and social media features
-// Use different base URL for development vs production
-const API_BASE = (() => {
-  const isDev = import.meta.env.DEV;
-  const hostname = window.location.hostname;
-  const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
-  const isRender = hostname.includes('onrender.com');
-  
-  console.log('🔍 Environment Detection:', {
-    isDev,
-    hostname,
-    isLocalhost,
-    isRender,
-    fullUrl: window.location.href
-  });
-  
-  // Check if we're in development mode
-  if (isDev) {
-    console.log('🔧 DEV MODE: Using localhost:8000');
-    return 'http://localhost:8000/api';
-  }
-  
-  // Check if we're running locally (Docker or localhost)
-  if (isLocalhost) {
-    console.log('🏠 LOCALHOST: Using localhost:8000');
-    return 'http://localhost:8000/api';
-  }
-  
-  // For production (Render), use direct backend URL
-  console.log('🚀 PRODUCTION: Using auth-app-backend-udya.onrender.com');
-  return 'https://auth-app-backend-udya.onrender.com/api';
-})();
+// TEMPORARILY HARDCODED FOR TESTING
+const API_BASE = 'https://auth-app-backend-udya.onrender.com/api';
 
-// Debug: Log the final API_BASE
-console.log('🔗 API_BASE:', API_BASE);
+console.log('🔗 API_BASE (HARDCODED):', API_BASE);
 console.log('🌐 Current hostname:', window.location.hostname);
 console.log('🔧 DEV mode:', import.meta.env.DEV);
 
