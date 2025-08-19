@@ -10,6 +10,10 @@ class Settings(BaseSettings):
     cors_allowed_origins: str = "http://localhost:3000"
     access_token_expires_minutes: int = Field(30, ge=1, le=1440)
     refresh_token_expires_days: int = 7
+    smtp_host: str
+    smtp_port: int
+    smtp_username: str
+    smtp_password: str
     environment: str = "local"
 
     class Config:

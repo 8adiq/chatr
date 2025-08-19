@@ -4,11 +4,15 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi import HTTPException, Depends,status
 from sqlalchemy.orm import Session
 from app.users.models import User
-from app.posts.models import  Post
+from app.auth.model import EmailVerificationToken
 from app.database.main import get_db_session
 from app.config import settings
-import os
 import bcrypt
+import uuid
+from datetime import datetime, timedelta
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 
 SECRET_KEY = settings.secret_key
@@ -84,6 +88,103 @@ def get_user_details(credentials: HTTPAuthorizationCredentials = Depends(securit
     if user is None:
         raise HTTPException(status_code=401,detail="User not found")
     return user
+
+
+def generate_verification_token():
+    """generate a random token"""
+    return str(uuid.uuid4())
+
+def create_verification_token(user_id, db: Session):
+    """create and store token for a user"""
+
+    token = generate_verification_token()
+    expired_at = datetime.utcnow() + timedelta(hours=24)
+
+    verification_token = EmailVerificationToken(
+        user_id=user_id,
+        token=token,
+        expired_at=expired_at
+    )
+    db.add(verification_token)
+    db.commit()
+    db.refresh(verification_token)  
+    return verification_token
+
+def send_verification_email(user_email,token,username):
+    """sending verification to user after registration"""
+    try:
+        smtp_server=settings.smtp_host
+        smtp_port=settings.smtp_port
+        smtp_username=settings.smtp_username
+        smtp_password=settings.smtp_password
+
+        msg = MIMEMultipart()
+        msg["From"] = smtp_username
+        msg["To"] = user_email
+        msg["Subject"] = "Verify Your Email Address"
+
+
+        verification_url = f"http://localhost:3000/verify-email?token={token}"
+
+        body = f"""
+        Hello {username}!
+        
+        Thank you for registering. Please verify your email address by clicking the link below:
+        
+        {verification_url}
+        
+        This link will expire in 24 hours.
+        
+        If you didn't create an account, please ignore this email.
+        
+        Best regards,
+        Your App Team
+        """
+
+        msg.attach(MIMEText(body,'plain'))
+
+        server = smtplib.SMTP(smtp_server,smtp_port)
+        server.starttls()
+        server.login(smtp_username,smtp_password)
+        server.send_message(msg)
+        server.quit()
+
+        return True
+
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,detail="Error sending email :{e}")
+
+
+def validate_email_token(token,db: Session) -> bool:
+    """validate the token returned after the user verifies their email"""
+
+    verification_token = db.query(EmailVerificationToken).filter(EmailVerificationToken.token == token).first()
+
+    if not verification_token:
+        return False
+    
+    if verification_token.expired_at < datetime.utcnow():
+        return False
+    
+    if verification_token.used_at:
+        return False
+    
+    verification_token.used_at = datetime.utcnow()
+
+    user = db.query(User).filter(User.id == verification_token.user_id).first()
+
+    if user:
+        user.is_verified = True
+    
+    db.commit()
+    return True
+
+    
+
+
+def resend_verification_email():
+    pass
+
 
 
 
