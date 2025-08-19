@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, ForeignKey, DateTime, UniqueConstraint, Index, func
+from sqlalchemy import Column, String, ForeignKey, DateTime,Boolean, UniqueConstraint, Index, func
 from sqlalchemy.orm import relationship
 import uuid
 from app.database.main import Base
@@ -8,6 +8,7 @@ class User(Base):
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()), index=True)
     username = Column(String(50), unique=True, index=True, nullable=False)
     email = Column(String(100), nullable=False)
+    is_verified = Column(Boolean, default= False)
     hashed_password = Column(String(255), nullable=False)
 
 
