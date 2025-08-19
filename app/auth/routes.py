@@ -3,8 +3,8 @@ from sqlalchemy.orm import Session
 from typing import List
 from app.users.models import User
 from app.users.schema import UserCreate,UserResponse,UserLogin
-from app.auth.schema import TokenResponse,RequestTokenResponse
-from app.auth.service import create_access_token,create_refresh_token,verify_token
+from app.auth.schema import TokenResponse,RequestTokenResponse,EmailVerificationRequest,EmailVerificationResponse
+from app.auth.service import create_access_token,create_refresh_token,verify_token,validate_email_token,send_verification_email,create_verification_token
 from app.database.main import get_db_session
 from app.users.service import UserService
 
@@ -20,6 +20,16 @@ async def register(user_data: UserCreate, db: Session = Depends(get_db_session))
     # Create user with validation
     db_user = user_service.create_user(user_data)
 
+    try:
+        verification_token = create_verification_token(db_user.id,db)
+        email_sent = send_verification_email(
+            db_user.email,
+            verification_token.token,
+            db_user.username
+        )
+    except Exception as e:
+        print(f"Failed to send verification email: {e}")
+        
     # creates tokens
     access_token = create_access_token(data={"sub": db_user.email})
     refresh_token = create_refresh_token(data={"sub":db_user.email})
@@ -69,3 +79,23 @@ async def get_refresh_token(refresh_data: RequestTokenResponse, db : Session = D
         }
     except HTTPException:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="Token invalid or expired.")
+    
+
+@router.post('/verify-email',response_model=EmailVerificationResponse)
+async def verify_email(verification_data: EmailVerificationRequest, db: Session = Depends(get_db_session)):
+    
+    try:
+        is_valid = validate_email_token(verification_data.token, db)
+
+        if is_valid:
+            return EmailVerificationResponse(
+                success=True,
+                message="Email verified successfully!"
+            )
+        else:
+            return EmailVerificationResponse(
+                success=False,
+                message="Invalid or expired verification token"
+            )
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,detail=f"Error during verification {str(e)}")

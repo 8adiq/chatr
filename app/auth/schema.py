@@ -8,3 +8,10 @@ class TokenResponse(BaseModel):
 
 class RequestTokenResponse(BaseModel):
     refresh_token : str
+
+class EmailVerificationRequest(BaseModel):
+    token: str
+
+class EmailVerificationResponse(BaseModel):
+    success: bool
+    message: str
