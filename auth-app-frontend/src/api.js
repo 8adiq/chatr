@@ -208,4 +208,14 @@ export async function getUserLikes(tokenManager) {
   return apiCallWithRefresh(`${API_BASE}/user/likes`, {
     headers: { 'Content-Type': 'application/json' },
   }, tokenManager);
+}
+
+// Email Verification
+export async function verifyEmail(token) {
+  const res = await fetch(`${API_BASE}/verify-email`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token }),
+  });
+  return handleResponse(res);
 } 

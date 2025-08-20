@@ -6,6 +6,7 @@ const AuthForm = ({
   loading, 
   error, 
   success, 
+  showVerificationMessage,
   onFormChange, 
   onSubmit, 
   onModeChange
@@ -18,6 +19,17 @@ const AuthForm = ({
       {loading && <p className="loading">Loading<span className="loading-dots"></span></p>}
       {error && <p className="error">{error}</p>}
       {success && <p className="success">{success}</p>}
+      
+      {showVerificationMessage && (
+        <div className="verification-message mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <p className="success mb-2">
+            Account created successfully! Please check your email for verification link.
+          </p>
+          <p className="text-sm text-gray-600">
+            Didn't receive the email? Check your spam folder.
+          </p>
+        </div>
+      )}
       
       <form onSubmit={onSubmit} className="auth-form">
         {mode === 'register' && (

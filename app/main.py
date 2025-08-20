@@ -16,6 +16,8 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Authentication API")
 
+
+
 # Global exception handlers
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request : Request, exc : RequestValidationError):
@@ -74,6 +76,7 @@ app.include_router(users_router, prefix='/api', tags=['users'])
 app.include_router(posts_router, prefix='/api', tags=['posts'])
 app.include_router(comments_router, prefix='/api', tags=['comments'])
 app.include_router(likes_router, prefix='/api', tags=['likes'])
+
 
 @app.get("/health")
 async def health_check():

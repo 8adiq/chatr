@@ -11,6 +11,7 @@ import bcrypt
 import uuid
 from datetime import datetime, timedelta
 import smtplib
+import ssl
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
@@ -90,10 +91,14 @@ def get_user_details(credentials: HTTPAuthorizationCredentials = Depends(securit
     return user
 
 
+def generate_verification_token():
+    """generate a random token"""
+    return str(uuid.uuid4())
+
 def create_verification_token(user_id, db: Session):
     """create and store token for a user"""
 
-    token = str(uuid.uuid4())
+    token = generate_verification_token()
     expired_at = datetime.utcnow() + timedelta(hours=24)
 
     verification_token = EmailVerificationToken(
@@ -106,13 +111,13 @@ def create_verification_token(user_id, db: Session):
     db.refresh(verification_token)  
     return verification_token
 
-def send_verification_email(user_email, token, username):
-    """Send verification email to user after registration"""
+def send_verification_email(user_email,token,username):
+    """sending verification to user after registration"""
     try:
-        smtp_server = settings.smtp_host
-        smtp_port = settings.smtp_port
-        smtp_username = settings.smtp_username
-        smtp_password = settings.smtp_password
+        smtp_server=settings.smtp_host
+        smtp_port=settings.smtp_port
+        smtp_username=settings.smtp_username
+        smtp_password=settings.smtp_password
 
         msg = MIMEMultipart()
         msg["From"] = smtp_username
@@ -136,21 +141,25 @@ def send_verification_email(user_email, token, username):
         Your App Team
         """
 
-        msg.attach(MIMEText(body, 'plain'))
+        msg.attach(MIMEText(body,'plain'))
 
-        server = smtplib.SMTP(smtp_server, smtp_port)
-        server.starttls()
-        server.login(smtp_username, smtp_password)
+        if smtp_port == 465:
+            # Use SSL for port 465
+            context = ssl.create_default_context()
+            server = smtplib.SMTP_SSL(smtp_server, smtp_port, context=context)
+        else:
+            # Use STARTTLS for port 587
+            server = smtplib.SMTP(smtp_server, smtp_port)
+            server.starttls()
+        
+        server.login(smtp_username,smtp_password)
         server.send_message(msg)
         server.quit()
 
         return True
 
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error sending email: {e}"
-        )
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,detail="Error sending email :{e}")
 
 
 def validate_email_token(token,db: Session) -> bool:

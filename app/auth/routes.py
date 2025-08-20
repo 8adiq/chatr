@@ -11,6 +11,8 @@ from app.users.service import UserService
 
 router = APIRouter()
 
+
+
 # User Routes
 @router.post("/register", response_model= TokenResponse, status_code=status.HTTP_201_CREATED)
 async def register(user_data: UserCreate, db: Session = Depends(get_db_session)):
@@ -27,6 +29,8 @@ async def register(user_data: UserCreate, db: Session = Depends(get_db_session))
             verification_token.token,
             db_user.username
         )
+        if email_sent:
+            print(f"Email sent to user {db_user.username}")
     except Exception as e:
         print(f"Failed to send verification email: {e}")
         

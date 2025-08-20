@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
+import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import './App.css';
 import { getUserById, getComments } from './api';
 import { usePosts, useCreatePost, useUpdatePost, useDeletePost, useLikePost } from './hooks/usePostsQuery';
@@ -11,6 +12,7 @@ import AuthForm from './components/AuthForm';
 import Feed from './components/Feed';
 import UserModal from './components/UserModal';
 import CreatePostModal from './components/CreatePostModal';
+import EmailVerification from './components/EmailVerification';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -29,6 +31,8 @@ const queryClient = new QueryClient({
 
 function AppContent() {
   const queryClient = useQueryClient();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [mode, setMode] = useState('login'); // 'login' | 'register' | 'feed' | 'create-post'
   const [form, setForm] = useState({ username: '', email: '', password: '' });
   
@@ -56,6 +60,7 @@ function AppContent() {
   const [user, setUser] = useState(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [showVerificationMessage, setShowVerificationMessage] = useState(false);
 
   // React Query hooks
   const { data: postsData, isLoading: postsLoading, error: postsError } = usePosts();
@@ -98,311 +103,172 @@ function AppContent() {
     setMode('feed');
   };
 
-  const clearMessages = () => {
+  // Handle registration success with email verification
+  const handleRegistrationSuccess = (data) => {
+    updateTokens(data.token, data.refresh_token);
+    setUser(data.user);
+    setShowVerificationMessage(true);
+    setMode('feed');
+    
+    // Hide verification message after 10 seconds
+    setTimeout(() => {
+      setShowVerificationMessage(false);
+    }, 10000);
+  };
+
+  // Handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     setError('');
     setSuccess('');
-  };
+    setShowVerificationMessage(false);
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handleRegister = async (e) => {
-    e.preventDefault();
-    try {
-      const data = await registerMutation.mutateAsync(form);
-      handleAuthSuccess(data);
-      setMode('feed');
-    } catch (err) {
-      setError(err.message);
+    if (mode === 'login') {
+      try {
+        const data = await loginMutation.mutateAsync({
+          email: form.email,
+          password: form.password,
+        });
+        handleAuthSuccess(data);
+      } catch (error) {
+        setError(error.message);
+      }
+    } else if (mode === 'register') {
+      try {
+        const data = await registerMutation.mutateAsync({
+          username: form.username,
+          email: form.email,
+          password: form.password,
+        });
+        handleRegistrationSuccess(data);
+      } catch (error) {
+        setError(error.message);
+      }
     }
   };
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    try {
-      const data = await loginMutation.mutateAsync(form);
-      handleAuthSuccess(data);
-      setMode('feed');
-    } catch (err) {
-      setError(err.message);
-    }
+  // Handle form changes
+  const handleFormChange = (e) => {
+    setForm(prev => ({
+      ...prev,
+      [e.target.name]: e.target.value
+    }));
   };
 
+  // Handle mode changes
+  const handleModeChange = (newMode) => {
+    setMode(newMode);
+    setError('');
+    setSuccess('');
+    setShowVerificationMessage(false);
+    setForm({ username: '', email: '', password: '' });
+  };
+
+  // Handle logout
   const handleLogout = () => {
     clearTokens();
     setUser(null);
     setMode('login');
-    setEditingPost(null);
-    setNewPost({ text: '' });
-    setShowUserModal(false);
-    setSelectedUser(null);
-    setError('');
-    setSuccess('');
+    setShowVerificationMessage(false);
+    navigate('/');
   };
 
-  const handleCreatePost = async (e) => {
-    e.preventDefault();
-    if (!newPost.text.trim()) return;
-    
-    try {
-      await createPostMutation.mutateAsync({ postData: newPost, tokenManager: { accessToken, getValidAccessToken: refreshAccessToken } });
-      setNewPost({ text: '' });
-      setMode('feed');
-    } catch (err) {
-      // Error is handled by React Query
-    }
-  };
+  // Check if we're on the email verification route
+  const isEmailVerificationRoute = location.pathname === '/verify-email';
 
-  const handleUpdatePost = async (postId, text) => {
-    try {
-      await updatePostMutation.mutateAsync({ postId, text, tokenManager: { accessToken, getValidAccessToken: refreshAccessToken } });
-      setEditingPost(null);
-    } catch (err) {
-      // Error is handled by React Query
-    }
-  };
-
-  const handleDeletePost = async (postId) => {
-    try {
-      await deletePostMutation.mutateAsync({ postId, tokenManager: { accessToken, getValidAccessToken: refreshAccessToken } });
-    } catch (err) {
-      // Error is handled by React Query
-    }
-  };
-
-  const handleCreateComment = async (postId) => {
-    try {
-      const commentText = newComment[postId];
-      if (!commentText?.trim()) return;
-      
-      const newCommentData = await createCommentMutation.mutateAsync({ 
-        postId, 
-        commentData: { text: commentText }, 
-        tokenManager: { accessToken, getValidAccessToken: refreshAccessToken } 
-      });
-      
-      // Clear the comment input
-      setNewComment(prev => ({
-        ...prev,
-        [postId]: ''
-      }));
-      
-      // Immediately add the new comment to the loaded comments
-      setLoadedComments(prev => ({
-        ...prev,
-        [postId]: [...(prev[postId] || []), newCommentData]
-      }));
-      
-      // Update post comment count
-      queryClient.setQueryData(['posts', 'list'], (oldData) => {
-        if (!oldData) return oldData;
-        // Updating comment count for post
-        return oldData.map(post => {
-          if (post.id === postId) {
-            const newCount = (post.comment_count || 0) + 1;
-            // Post comment count updated
-            return {
-              ...post,
-              comment_count: newCount
-            };
-          }
-          return post;
-        });
-      });
-    } catch (err) {
-      console.error('Error creating comment:', err);
-    }
-  };
-
-  const handleLikePost = async (postId) => {
-    try {
-      const isLiked = likedPosts.has(postId);
-      
-              await likePostMutation.mutateAsync({ postId, tokenManager: { accessToken, getValidAccessToken: refreshAccessToken }, isLiked });
-      
-      // Update local like state
-      setLikedPosts(prev => {
-        const newSet = new Set(prev);
-        if (isLiked) {
-          newSet.delete(postId);
-        } else {
-          newSet.add(postId);
-        }
-        return newSet;
-      });
-      
-      // Update post like count
-      queryClient.setQueryData(['posts', 'list'], (oldData) => {
-        if (!oldData) return oldData;
-        // Updating like count for post
-        return oldData.map(post => {
-          if (post.id === postId) {
-            const newCount = isLiked ? (post.like_count || 1) - 1 : (post.like_count || 0) + 1;
-            // Post like count updated
-            return {
-              ...post,
-              like_count: newCount
-            };
-          }
-          return post;
-        });
-      });
-    } catch (err) {
-      console.error('Error liking post:', err);
-    }
-  };
-
-  const handleUserClick = async (userId) => {
-    try {
-      const userData = await getUserById(userId);
-      setSelectedUser(userData);
-      setShowUserModal(true);
-    } catch (err) {
-      setError('Failed to load user details');
-    }
-  };
-
-  const handleEditPost = (postId) => {
-    setEditingPost(postId);
-  };
-
-  const handleCancelEdit = () => {
-    setEditingPost(null);
-  };
-
-  const handleLoadComments = async (postId) => {
-    if (loadedComments[postId]) return; // Already loaded
-    
-    try {
-      const comments = await getComments(postId);
-      setLoadedComments(prev => ({
-        ...prev,
-        [postId]: comments
-      }));
-    } catch (err) {
-      console.error('Failed to load comments:', err);
-    }
-  };
-
-  const handleNewCommentChange = (postId, value) => {
-    setNewComment(prev => ({
-      ...prev,
-      [postId]: value
-    }));
-  };
-
-  const handleNewPostChange = (e) => {
-    setNewPost({ text: e.target.value });
-  };
-
-  const handleModeChange = (newMode) => {
-    setMode(newMode);
-    clearMessages();
-  };
-
-  const handleViewPosts = () => {
-    setViewingUserPosts(selectedUser);
-    setShowUserModal(false);
-  };
-
-  const handleBackToFeed = () => {
-    setViewingUserPosts(null);
-  };
-
-  // If not authenticated, show auth form
-  if (!accessToken) {
-    return (
-      <AuthForm
-        mode={mode}
-        form={form}
-        loading={loginMutation.isPending || registerMutation.isPending}
-        error={error}
-        success={success}
-        onFormChange={handleChange}
-        onSubmit={mode === 'login' ? handleLogin : handleRegister}
-        onModeChange={handleModeChange}
-      />
-    );
+  // If on email verification route, render that component
+  if (isEmailVerificationRoute) {
+    return <EmailVerification />;
   }
 
-  // If creating post, show create post modal
-  if (mode === 'create-post') {
+  // If user is not authenticated, show auth form
+  if (!user && !accessToken) {
     return (
-      <>
-        <Feed
-          user={user}
-          posts={filteredPosts}
-          comments={loadedComments}
-          newComment={newComment}
-          editingPost={editingPost}
-          likedPosts={likedPosts}
-          loading={postsLoading}
-          error={postsError?.message}
+      <div className="app">
+        <AuthForm
+          mode={mode}
+          form={form}
+          loading={loginMutation.isLoading || registerMutation.isLoading}
+          error={error}
           success={success}
-          viewingUserPosts={viewingUserPosts}
-          onCreatePost={() => setMode('create-post')}
-          onLogout={handleLogout}
-          onUserClick={handleUserClick}
-          onEditPost={handleEditPost}
-          onDeletePost={handleDeletePost}
-          onUpdatePost={handleUpdatePost}
-          onLikePost={handleLikePost}
-          onLoadComments={handleLoadComments}
-          onCreateComment={handleCreateComment}
-          onNewCommentChange={handleNewCommentChange}
-          onCancelEdit={handleCancelEdit}
-          onBackToFeed={handleBackToFeed}
-          formatDate={formatDate}
+          showVerificationMessage={showVerificationMessage}
+          onFormChange={handleFormChange}
+          onSubmit={handleSubmit}
+          onModeChange={handleModeChange}
         />
-        <CreatePostModal
-          newPost={newPost}
-          loading={createPostMutation.isPending}
-          onClose={() => setMode('feed')}
-          onSubmit={handleCreatePost}
-          onTextChange={handleNewPostChange}
-        />
-      </>
+      </div>
     );
   }
 
-  // Show feed with user modal if open
+  // Main app content for authenticated users
   return (
-    <>
+    <div className="app">
+      {/* Rest of your existing app content */}
       <Feed
-        user={user}
         posts={filteredPosts}
-        comments={loadedComments}
-        newComment={newComment}
-        editingPost={editingPost}
-        likedPosts={likedPosts}
         loading={postsLoading}
-        error={postsError?.message}
-        success={success}
-        viewingUserPosts={viewingUserPosts}
-        onCreatePost={() => setMode('create-post')}
+        error={postsError}
+        user={user}
         onLogout={handleLogout}
-        onUserClick={handleUserClick}
-        onEditPost={handleEditPost}
-        onDeletePost={handleDeletePost}
-        onUpdatePost={handleUpdatePost}
-        onLikePost={handleLikePost}
-        onLoadComments={handleLoadComments}
-        onCreateComment={handleCreateComment}
-        onNewCommentChange={handleNewCommentChange}
-        onCancelEdit={handleCancelEdit}
-        onBackToFeed={handleBackToFeed}
-        formatDate={formatDate}
+        onUserClick={(user) => {
+          setSelectedUser(user);
+          setShowUserModal(true);
+        }}
+        onViewUserPosts={(user) => {
+          setViewingUserPosts(user);
+        }}
+        onClearUserPosts={() => setViewingUserPosts(null)}
+        onLikePost={likePostMutation.mutate}
+        onUnlikePost={likePostMutation.mutate}
+        likedPosts={likedPosts}
+        onEditPost={(post) => setEditingPost(post)}
+        onDeletePost={deletePostMutation.mutate}
+        onComment={(postId, comment) => createCommentMutation.mutate({ postId, comment })}
+        onLoadComments={(postId) => {
+          if (!loadedComments[postId]) {
+            getComments(postId).then(comments => {
+              setLoadedComments(prev => ({ ...prev, [postId]: comments }));
+            });
+          }
+        }}
+        loadedComments={loadedComments}
+        onNewCommentChange={(postId, text) => {
+          setNewComment(prev => ({ ...prev, [postId]: text }));
+        }}
+        newComment={newComment}
+        onClearNewComment={(postId) => {
+          setNewComment(prev => ({ ...prev, [postId]: '' }));
+        }}
       />
-      {showUserModal && (
+
+      {/* Modals */}
+      {showUserModal && selectedUser && (
         <UserModal
-          selectedUser={selectedUser}
-          onClose={() => setShowUserModal(false)}
-          onViewPosts={handleViewPosts}
-          getRandomAvatar={getRandomAvatar}
+          user={selectedUser}
+          onClose={() => {
+            setShowUserModal(false);
+            setSelectedUser(null);
+          }}
+          onViewPosts={() => {
+            setViewingUserPosts(selectedUser);
+            setShowUserModal(false);
+            setSelectedUser(null);
+          }}
         />
       )}
-    </>
+
+      {editingPost && (
+        <CreatePostModal
+          mode="edit"
+          post={editingPost}
+          onClose={() => setEditingPost(null)}
+          onSubmit={(updatedPost) => {
+            updatePostMutation.mutate(updatedPost);
+            setEditingPost(null);
+          }}
+        />
+      )}
+    </div>
   );
 }
 
