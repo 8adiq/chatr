@@ -2,5 +2,6 @@ fenv/
 __pycache__/
 *.pyc
 .env
+.env.config
 app/test.py
 reset_database.py

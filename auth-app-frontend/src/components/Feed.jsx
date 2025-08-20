@@ -12,6 +12,8 @@ const Feed = ({
   loading,
   error,
   success,
+  showVerificationMessage,
+  onDismissVerification,
   viewingUserPosts,
   onCreatePost,
   onLogout,
@@ -27,6 +29,11 @@ const Feed = ({
   onBackToFeed,
   formatDate
 }) => {
+  console.log('=== FEED COMPONENT RENDER ===');
+  console.log('Feed component - showVerificationMessage:', showVerificationMessage);
+  console.log('Feed component - user:', user);
+  console.log('Feed component - typeof showVerificationMessage:', typeof showVerificationMessage);
+  console.log('Feed component - showVerificationMessage === true:', showVerificationMessage === true);
   return (
     <div className="feed-container">
       <FeedHeader 
@@ -41,6 +48,36 @@ const Feed = ({
       {loading && <p className="loading">Loading...</p>}
       {error && <p className="error">{error}</p>}
       {success && <p className="success">{success}</p>}
+      
+      {showVerificationMessage && (
+        <div className="verification-banner">
+          {console.log('=== RENDERING VERIFICATION BANNER ===')}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div style={{ flex: 1 }}>
+              <h3>🎉 Welcome to chatr!</h3>
+              <p>Your account has been created successfully! Please check your email for a verification link.</p>
+              <p><strong>💡 Tip:</strong> Check your spam folder if you don't see the email in your inbox.</p>
+            </div>
+            <button 
+              onClick={onDismissVerification} 
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#3b82f6',
+                cursor: 'pointer',
+                padding: '0.25rem',
+                borderRadius: '4px',
+                fontSize: '1.125rem'
+              }}
+              onMouseOver={(e) => e.target.style.backgroundColor = 'rgba(59, 130, 246, 0.1)'}
+              onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
+              title="Dismiss message"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="posts-container">
         {posts.map(post => (

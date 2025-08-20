@@ -21,13 +21,23 @@ const AuthForm = ({
       {success && <p className="success">{success}</p>}
       
       {showVerificationMessage && (
-        <div className="verification-message mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="success mb-2">
-            Account created successfully! Please check your email for verification link.
-          </p>
-          <p className="text-sm text-gray-600">
-            Didn't receive the email? Check your spam folder.
-          </p>
+        <div className="verification-message mb-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg shadow-sm">
+          <div className="flex items-start">
+            <div className="flex-shrink-0">
+              <span className="text-2xl">🎉</span>
+            </div>
+            <div className="ml-3 flex-1">
+              <h3 className="text-lg font-semibold text-green-800 mb-2">
+                Account Created Successfully!
+              </h3>
+              <p className="text-green-700 mb-2">
+                Please check your email for a verification link to complete your registration.
+              </p>
+              <p className="text-sm text-green-600">
+                💡 <strong>Tip:</strong> Check your spam folder if you don't see the email in your inbox.
+              </p>
+            </div>
+          </div>
         </div>
       )}
       
