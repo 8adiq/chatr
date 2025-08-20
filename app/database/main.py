@@ -26,11 +26,21 @@ def init_db():
     import os
 
     inspector = inspect(engine)
-    if not inspector.has_table("Users"):
+    
+    # Check if all required tables exist
+    required_tables = ["Users", "EmailVerificationTokens","Comments","Posts","Likes"]
+    missing_tables = []
+    
+    for table in required_tables:
+        if not inspector.has_table(table):
+            missing_tables.append(table)
+    
+    if missing_tables:
+        print(f"Creating missing tables: {missing_tables}")
         Base.metadata.create_all(bind=engine)
-        print("Database created")
+        print(" All tables created successfully")
     else:
-        print(f"Database table already exists")
+        print(" All required tables already exist")
     
     # Run migrations to ensure schema is up to date
     try:
