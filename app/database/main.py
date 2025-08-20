@@ -25,6 +25,13 @@ def init_db():
     import subprocess
     import os
 
+    # Import all models to ensure they're registered with Base.metadata
+    from app.users.models import User
+    from app.auth.model import EmailVerificationToken
+    from app.posts.models import Post
+    from app.comments.models import Comment
+    from app.likes.models import Like
+
     inspector = inspect(engine)
     
     # Check if all required tables exist
@@ -38,9 +45,9 @@ def init_db():
     if missing_tables:
         print(f"Creating missing tables: {missing_tables}")
         Base.metadata.create_all(bind=engine)
-        print(" All tables created successfully")
+        print("✅ All tables created successfully")
     else:
-        print(" All required tables already exist")
+        print("✅ All required tables already exist")
     
     # Run migrations to ensure schema is up to date
     try:

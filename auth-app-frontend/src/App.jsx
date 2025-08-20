@@ -103,11 +103,12 @@ function AppContent() {
     console.log('showVerificationMessage state changed to:', showVerificationMessage);
   }, [showVerificationMessage]);
 
-  // Monitor user state changes
+  // Monitor user state changes (reduced logging)
   useEffect(() => {
-    console.log('User state changed to:', user);
-    console.log('Current showVerificationMessage:', showVerificationMessage);
-  }, [user, showVerificationMessage]);
+    if (user) {
+      console.log('User state changed to:', user.username);
+    }
+  }, [user]);
 
   // Handle authentication success
   const handleAuthSuccess = (data) => {
@@ -260,9 +261,9 @@ function AppContent() {
         onCreatePost={() => setMode('create-post')}
         onBackToFeed={() => setViewingUserPosts(null)}
         onEditPost={(post) => setEditingPost(post)}
-        onDeletePost={deletePostMutation.mutate}
-        onUpdatePost={updatePostMutation.mutate}
-        onLikePost={likePostMutation.mutate}
+        onDeletePost={(postId) => deletePostMutation.mutate({ postId, tokenManager: { accessToken, refreshAccessToken } })}
+        onUpdatePost={(postId, text) => updatePostMutation.mutate({ postId, text, tokenManager: { accessToken, refreshAccessToken } })}
+        onLikePost={(postId, isLiked) => likePostMutation.mutate({ postId, isLiked, tokenManager: { accessToken, refreshAccessToken } })}
         onLoadComments={(postId) => {
           if (!loadedComments[postId]) {
             getComments(postId).then(comments => {
@@ -270,7 +271,7 @@ function AppContent() {
             });
           }
         }}
-        onCreateComment={(postId, comment) => createCommentMutation.mutate({ postId, comment })}
+        onCreateComment={(postId, comment) => createCommentMutation.mutate({ postId, commentData: comment, tokenManager: { accessToken, refreshAccessToken } })}
         onNewCommentChange={(postId, text) => {
           setNewComment(prev => ({ ...prev, [postId]: text }));
         }}
@@ -299,7 +300,11 @@ function AppContent() {
           post={editingPost}
           onClose={() => setEditingPost(null)}
           onSubmit={(updatedPost) => {
-            updatePostMutation.mutate(updatedPost);
+            updatePostMutation.mutate({ 
+              postId: updatedPost.id, 
+              text: updatedPost.text, 
+              tokenManager: { accessToken, refreshAccessToken } 
+            });
             setEditingPost(null);
           }}
         />

@@ -119,12 +119,21 @@ def send_verification_email(user_email,token,username):
         smtp_username=settings.smtp_username
         smtp_password=settings.smtp_password
 
+        print(f"🔍 Attempting to send email to: {user_email}")
+        print(f"🔍 Verification token created: {token[:8]}...")
+        print(f"🔍 SMTP Settings: {smtp_server}:{smtp_port}")
+        print(f"🔍 SMTP Username: {smtp_username}")
+
         msg = MIMEMultipart()
         msg["From"] = smtp_username
         msg["To"] = user_email
         msg["Subject"] = "Verify Your Email Address"
 
-        verification_url = f"http://localhost:3000/verify-email?token={token}"
+        # Use production URL for verification
+        if settings.environment == "production":
+            verification_url = f"https://auth-app-frontend-udya.onrender.com/verify-email?token={token}"
+        else:
+            verification_url = f"http://localhost:3000/verify-email?token={token}"
 
         body = f"""
         Hello {username}!
@@ -143,22 +152,31 @@ def send_verification_email(user_email,token,username):
 
         msg.attach(MIMEText(body,'plain'))
 
+        print(f"🔍 Attempting to connect to SMTP server...")
+        
         if smtp_port == 465:
             # Use SSL for port 465
             context = ssl.create_default_context()
             server = smtplib.SMTP_SSL(smtp_server, smtp_port, context=context)
+            print(f"🔍 Connecting to SMTP server...")
         else:
             # Use STARTTLS for port 587
             server = smtplib.SMTP(smtp_server, smtp_port)
             server.starttls()
+            print(f"🔍 Connecting to SMTP server...")
         
         server.login(smtp_username,smtp_password)
         server.send_message(msg)
         server.quit()
 
+        print(f"✅ Email sent successfully to {user_email}")
         return True
 
     except Exception as e:
+        print(f"❌ SMTP Error: {e}")
+        print(f"❌ Error type: {type(e)}")
+        print(f"❌ Exception during email sending: {e}")
+        print(f"❌ Exception type: {type(e)}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,detail="Error sending email :{e}")
 
 

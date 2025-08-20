@@ -29,11 +29,10 @@ const Feed = ({
   onBackToFeed,
   formatDate
 }) => {
-  console.log('=== FEED COMPONENT RENDER ===');
-  console.log('Feed component - showVerificationMessage:', showVerificationMessage);
-  console.log('Feed component - user:', user);
-  console.log('Feed component - typeof showVerificationMessage:', typeof showVerificationMessage);
-  console.log('Feed component - showVerificationMessage === true:', showVerificationMessage === true);
+  // Reduced logging to prevent console spam
+  if (showVerificationMessage) {
+    console.log('Feed: Rendering verification banner');
+  }
   return (
     <div className="feed-container">
       <FeedHeader 
@@ -51,7 +50,6 @@ const Feed = ({
       
       {showVerificationMessage && (
         <div className="verification-banner">
-          {console.log('=== RENDERING VERIFICATION BANNER ===')}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div style={{ flex: 1 }}>
               <h3>🎉 Welcome to chatr!</h3>
