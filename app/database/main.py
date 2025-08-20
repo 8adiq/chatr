@@ -20,8 +20,10 @@ def get_db_session():
         db.close()
 
 def init_db():
-    """ checking if table exits before creating"""
+    """ checking if table exits before creating and running migrations"""
     from sqlalchemy import inspect
+    import subprocess
+    import os
 
     inspector = inspect(engine)
     if not inspector.has_table("Users"):
@@ -29,4 +31,21 @@ def init_db():
         print("Database created")
     else:
         print(f"Database table already exists")
+    
+    # Run migrations to ensure schema is up to date
+    try:
+        print("Running database migrations...")
+        result = subprocess.run(
+            ["alembic", "upgrade", "head"],
+            capture_output=True,
+            text=True,
+            cwd=os.getcwd()
+        )
+        if result.returncode == 0:
+            print(" Migrations applied successfully")
+        else:
+            print(f" Migration warning: {result.stderr}")
+    except Exception as e:
+        print(f" Migration error (non-critical): {e}")
+        print("Continuing with application startup...")
 
