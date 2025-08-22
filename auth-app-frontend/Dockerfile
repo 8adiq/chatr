@@ -1,16 +1,18 @@
-FROM node:20-alpine as build
+FROM node:18-alpine as build
 
 
 WORKDIR /app
 
-
+# Copy package files
 COPY package*.json ./
 
-RUN npm install
+# Install dependencies with legacy peer deps to avoid conflicts
+RUN npm install --legacy-peer-deps
 
-
+# Copy source code
 COPY . .
 
+# Build the application
 RUN npm run build
 
 FROM nginx:alpine
