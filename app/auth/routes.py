@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException,Depends, status
+from fastapi import APIRouter, HTTPException,Depends, status,BackgroundTasks
 from sqlalchemy.orm import Session
 from typing import List
 from app.users.models import User
@@ -15,34 +15,30 @@ router = APIRouter()
 
 # User Routes
 @router.post("/register", response_model= TokenResponse, status_code=status.HTTP_201_CREATED)
-async def register(user_data: UserCreate, db: Session = Depends(get_db_session)):
-
-    user_service = UserService(db)
-    
-    # Create user with validation
-    db_user = user_service.create_user(user_data)
+async def register(user_data: UserCreate,background_tasks : BackgroundTasks, db: Session = Depends(get_db_session)):
 
     try:
-        verification_token = create_verification_token(db_user.id,db)
-        email_sent = send_verification_email(
-            db_user.email,
-            verification_token.token,
-            db_user.username
-        )
-        if email_sent:
-            print(f"Email sent to user {db_user.username}")
-    except Exception as e:
-        print(f"Failed to send verification email: {e}")
+        user_service = UserService(db)
         
-    # creates tokens
-    access_token = create_access_token(data={"sub": db_user.email})
-    refresh_token = create_refresh_token(data={"sub":db_user.email})
+        # Create user with validation
+        db_user = user_service.create_user(user_data)
 
-    return {
-        "user": UserResponse(**db_user.to_dict()),
-        "token": access_token,
-        "refresh_token":refresh_token
-    }
+        verification_token = create_verification_token(db_user.id,db)
+        background_tasks.add_task(send_verification_email,db_user.email,verification_token.token,db_user.username)
+
+        # creates tokens
+        access_token = create_access_token(data={"sub": db_user.email})
+        refresh_token = create_refresh_token(data={"sub":db_user.email})
+
+        return {
+            "user": UserResponse(**db_user.to_dict()),
+            "token": access_token,
+            "refresh_token":refresh_token
+        }
+    except HTTPException as e:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,detail="Registration failed. Try again.")
 
 @router.post("/login",response_model=TokenResponse)
 async def login(user_data: UserLogin, db : Session = Depends(get_db_session)):
