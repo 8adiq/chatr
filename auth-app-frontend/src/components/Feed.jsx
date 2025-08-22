@@ -12,8 +12,6 @@ const Feed = ({
   loading,
   error,
   success,
-  showVerificationMessage,
-  onDismissVerification,
   viewingUserPosts,
   onCreatePost,
   onLogout,
@@ -27,12 +25,10 @@ const Feed = ({
   onNewCommentChange,
   onCancelEdit,
   onBackToFeed,
+  showVerificationMessage,
+  onDismissVerification,
   formatDate
 }) => {
-  // Reduced logging to prevent console spam
-  if (showVerificationMessage) {
-    console.log('Feed: Rendering verification banner');
-  }
   return (
     <div className="feed-container">
       <FeedHeader 
@@ -49,31 +45,13 @@ const Feed = ({
       {success && <p className="success">{success}</p>}
       
       {showVerificationMessage && (
-        <div className="verification-banner">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <div style={{ flex: 1 }}>
-              <h3>🎉 Welcome to chatr!</h3>
-              <p>Your account has been created successfully! Please check your email for a verification link.</p>
-              <p><strong>💡 Tip:</strong> Check your spam folder if you don't see the email in your inbox.</p>
-            </div>
-            <button 
-              onClick={onDismissVerification} 
-              style={{
-                background: 'none',
-                border: 'none',
-                color: '#3b82f6',
-                cursor: 'pointer',
-                padding: '0.25rem',
-                borderRadius: '4px',
-                fontSize: '1.125rem'
-              }}
-              onMouseOver={(e) => e.target.style.backgroundColor = 'rgba(59, 130, 246, 0.1)'}
-              onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
-              title="Dismiss message"
-            >
-              ✕
-            </button>
-          </div>
+        <div className="verification-message mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <p className="success mb-2">
+            Account created successfully! Please check your email for verification link.
+          </p>
+          <p className="text-sm text-gray-600">
+            Didn't receive the email? Check your spam folder.
+          </p>
         </div>
       )}
 
