@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { HeartIcon, CommentIcon, EditIcon, DeleteIcon } from './Icons';
 
 const PostCard = ({
   post,
@@ -31,7 +32,12 @@ const PostCard = ({
   const handleCommentToggle = () => {
     if (!comments[post.id]) {
       // Load comments if they haven't been loaded yet
-      onLoadComments(post.id);
+      if (typeof onLoadComments === 'function') {
+        onLoadComments(post.id);
+      } else {
+        console.error('onLoadComments is not a function:', onLoadComments);
+        return;
+      }
     }
     setCommentsVisible(!commentsVisible);
   };
@@ -49,18 +55,18 @@ const PostCard = ({
         {isOwnPost && (
           <div className="post-actions">
             <button 
-              onClick={() => onEditPost(post.id)}
+              onClick={() => onEditPost(post)}
               className="edit-btn"
               title="Edit post"
             >
-              ✏️
+              <EditIcon size={16} />
             </button>
             <button 
               onClick={() => onDeletePost(post.id)}
               className="delete-btn"
               title="Delete post"
             >
-              🗑️
+              <DeleteIcon size={16} />
             </button>
           </div>
         )}
@@ -93,11 +99,11 @@ const PostCard = ({
         <div className="post-actions-left">
           <div className="action-item">
             <button 
-              onClick={() => onLikePost(post.id)}
+              onClick={() => onLikePost(post.id, isLiked)}
               className={`like-btn ${isLiked ? 'liked' : ''}`}
               title={isLiked ? 'Unlike' : 'Like'}
             >
-              {isLiked ? '❤️' : '🤍'}
+              <HeartIcon filled={isLiked} size={16} />
             </button>
             <span className="action-count">{post.like_count || 0}</span>
           </div>
@@ -107,7 +113,7 @@ const PostCard = ({
               className="comment-btn"
               title={commentsVisible ? 'Hide comments' : 'Show comments'}
             >
-              💬
+              <CommentIcon size={16} />
             </button>
             <span className="action-count">{post.comment_count || 0}</span>
           </div>
@@ -139,7 +145,13 @@ const PostCard = ({
               onChange={(e) => onNewCommentChange(post.id, e.target.value)}
               className="input"
             />
-            <button onClick={() => onCreateComment(post.id)} className="btn btn-primary">
+            <button onClick={() => {
+              if (typeof onCreateComment === 'function') {
+                onCreateComment(post.id, newComment[post.id] || '');
+              } else {
+                console.error('onCreateComment is not a function:', onCreateComment);
+              }
+            }} className="btn btn-primary">
               Comment
             </button>
           </div>

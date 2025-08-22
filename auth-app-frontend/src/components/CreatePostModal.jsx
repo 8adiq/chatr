@@ -1,4 +1,5 @@
 import React from 'react';
+import { CloseIcon } from './Icons';
 
 const CreatePostModal = ({ 
   newPost, 
@@ -13,7 +14,7 @@ const CreatePostModal = ({
         <header className="create-post-header">
           <h2 className="font-semibold">Create New Post</h2>
           <button onClick={onClose} className="close-btn">
-            ✕
+            <CloseIcon size={16} />
           </button>
         </header>
 

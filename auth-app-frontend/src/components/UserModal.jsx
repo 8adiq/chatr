@@ -1,4 +1,5 @@
 import React from 'react';
+import { CloseIcon } from './Icons';
 
 const UserModal = ({ 
   selectedUser, 
@@ -14,7 +15,7 @@ const UserModal = ({
         <header className="user-modal-header">
           <h2 className="font-semibold">User Details</h2>
           <button onClick={onClose} className="close-btn">
-            ✕
+            <CloseIcon size={16} />
           </button>
         </header>
 

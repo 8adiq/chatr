@@ -1,4 +1,5 @@
 import React from 'react';
+import { BackIcon, LogoutIcon, PlusIcon } from './Icons';
 
 const FeedHeader = ({ 
   user, 
@@ -13,14 +14,14 @@ const FeedHeader = ({
       {viewingUserPosts ? (
         <>
           <div className="back-section">
-            <button onClick={onBackToFeed} className="btn btn-secondary">
-              ← Back to Feed
+            <button onClick={onBackToFeed} className="back-btn" title="Back to Feed">
+              <BackIcon size={18} />
             </button>
             <h1 className="font-bold text-xl">{viewingUserPosts.username}'s Posts</h1>
           </div>
           <div className="header-actions">
             <button onClick={onLogout} className="logout-btn" title="Logout">
-              ⏻
+              <LogoutIcon size={16} />
             </button>
           </div>
         </>
@@ -44,10 +45,10 @@ const FeedHeader = ({
           </div>
           <div className="header-actions">
             <button onClick={onCreatePost} className="create-post-btn" title="Create new post">
-              ✏️
+              <PlusIcon size={16} />
             </button>
             <button onClick={onLogout} className="logout-btn" title="Logout">
-              ⏻
+              <LogoutIcon size={16} />
             </button>
           </div>
         </>
