@@ -20,49 +20,13 @@ def get_db_session():
         db.close()
 
 def init_db():
-    """ checking if table exits before creating and running migrations"""
+    """ checking if table exits before creating"""
     from sqlalchemy import inspect
-    import subprocess
-    import os
-
-    # Import all models to ensure they're registered with Base.metadata
-    from app.users.models import User
-    from app.auth.model import EmailVerificationToken
-    from app.posts.models import Post
-    from app.comments.models import Comment
-    from app.likes.models import Like
 
     inspector = inspect(engine)
-    
-    # Check if all required tables exist
-    required_tables = ["Users", "EmailVerificationTokens","Comments","Posts","Likes"]
-    missing_tables = []
-    
-    for table in required_tables:
-        if not inspector.has_table(table):
-            missing_tables.append(table)
-    
-    if missing_tables:
-        print(f"Creating missing tables: {missing_tables}")
+    if not inspector.has_table("Users"):
         Base.metadata.create_all(bind=engine)
-        print("✅ All tables created successfully")
+        print("Database created")
     else:
-        print("✅ All required tables already exist")
-    
-    # Run migrations to ensure schema is up to date
-    try:
-        print("Running database migrations...")
-        result = subprocess.run(
-            ["alembic", "upgrade", "head"],
-            capture_output=True,
-            text=True,
-            cwd=os.getcwd()
-        )
-        if result.returncode == 0:
-            print(" Migrations applied successfully")
-        else:
-            print(f" Migration warning: {result.stderr}")
-    except Exception as e:
-        print(f" Migration error (non-critical): {e}")
-        print("Continuing with application startup...")
+        print(f"Database table already exists")
 
