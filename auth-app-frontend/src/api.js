@@ -129,9 +129,10 @@ export async function getProfile(tokenManager) {
   }, tokenManager);
 }
 
-export async function getUserById(userId) {
-  const res = await fetch(`${API_BASE}/users/${userId}`);
-  return handleResponse(res);
+export async function getUserById(userId, tokenManager) {
+  return apiCallWithRefresh(`${API_BASE}/users/${userId}`, {
+    headers: { 'Content-Type': 'application/json' }
+  }, tokenManager);
 }
 
 // Posts
@@ -176,9 +177,10 @@ export async function deletePost(postId, tokenManager) {
 }
 
 // Comments
-export async function getComments(postId, skip = 0, limit = 10) {
-  const res = await fetch(`${API_BASE}/${postId}/comments?skip=${skip}&limit=${limit}`);
-  return handleResponse(res);
+export async function getComments(postId, tokenManager, skip = 0, limit = 10) {
+  return apiCallWithRefresh(`${API_BASE}/${postId}/comments?skip=${skip}&limit=${limit}`, {
+    headers: { 'Content-Type': 'application/json' }
+  }, tokenManager);
 }
 
 export async function createComment(postId, commentData, tokenManager) {

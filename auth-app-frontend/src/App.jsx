@@ -49,12 +49,13 @@ function AppContent() {
   const [likedPosts, setLikedPosts] = useState(new Set());
   
   // Token management
+  const tokenManager = useTokenManager();
   const { 
     accessToken, 
     updateTokens, 
     clearTokens, 
     refreshAccessToken 
-  } = useTokenManager();
+  } = tokenManager;
   
   // User state
   const [user, setUser] = useState(null);
@@ -64,8 +65,8 @@ function AppContent() {
 
   // React Query hooks
   const { data: postsData, isLoading: postsLoading, error: postsError } = usePosts();
-  const { data: profileData, isLoading: profileLoading } = useProfile({ accessToken, getValidAccessToken: refreshAccessToken });
-  const { data: userLikesData } = useUserLikes({ accessToken, getValidAccessToken: refreshAccessToken });
+  const { data: profileData, isLoading: profileLoading } = useProfile(tokenManager);
+  const { data: userLikesData } = useUserLikes(tokenManager);
   
   // Filter posts when viewing a specific user's posts
   const filteredPosts = viewingUserPosts 
@@ -83,9 +84,7 @@ function AppContent() {
 
   // Update user when profile data changes
   useEffect(() => {
-    console.log('Profile data changed:', profileData);
     if (profileData?.user) {
-      console.log('Setting user from profile data');
       setUser(profileData.user);
     }
   }, [profileData]);
@@ -98,18 +97,6 @@ function AppContent() {
     }
   }, [userLikesData]);
 
-  // Monitor verification message state
-  useEffect(() => {
-    console.log('showVerificationMessage state changed to:', showVerificationMessage);
-  }, [showVerificationMessage]);
-
-  // Monitor user state changes (reduced logging)
-  useEffect(() => {
-    if (user) {
-      console.log('User state changed to:', user.username);
-    }
-  }, [user]);
-
   // Handle authentication success
   const handleAuthSuccess = (data) => {
     updateTokens(data.token, data.refresh_token);
@@ -119,33 +106,15 @@ function AppContent() {
 
   // Handle registration success with email verification
   const handleRegistrationSuccess = (data) => {
-    console.log('=== REGISTRATION SUCCESS HANDLER ===');
-    console.log('Registration successful, showing verification message');
-    console.log('Data received:', data);
-    console.log('Current showVerificationMessage state:', showVerificationMessage);
-    
-    // Set tokens and user first
     updateTokens(data.token, data.refresh_token);
     setUser(data.user);
+    setShowVerificationMessage(true);
+    setMode('feed');
     
-    // Use setTimeout to ensure state updates are processed
+    // Hide verification message after 10 seconds
     setTimeout(() => {
-      console.log('Setting showVerificationMessage to true');
-      setShowVerificationMessage(true);
-      setMode('feed');
-      console.log('Mode set to feed');
-    }, 100);
-    
-    // Hide verification message after 15 seconds
-    setTimeout(() => {
-      console.log('Hiding verification message after timeout');
       setShowVerificationMessage(false);
-    }, 15000);
-  };
-
-  // Dismiss verification message
-  const dismissVerificationMessage = () => {
-    setShowVerificationMessage(false);
+    }, 10000);
   };
 
   // Handle form submission
@@ -153,7 +122,7 @@ function AppContent() {
     e.preventDefault();
     setError('');
     setSuccess('');
-    // Don't reset verification message here as it might be needed for registration success
+    setShowVerificationMessage(false);
 
     if (mode === 'login') {
       try {
@@ -166,17 +135,14 @@ function AppContent() {
         setError(error.message);
       }
     } else if (mode === 'register') {
-      console.log('Starting registration process...');
       try {
         const data = await registerMutation.mutateAsync({
           username: form.username,
           email: form.email,
           password: form.password,
         });
-        console.log('Registration mutation completed, calling handleRegistrationSuccess');
         handleRegistrationSuccess(data);
       } catch (error) {
-        console.log('Registration error:', error);
         setError(error.message);
       }
     }
@@ -195,7 +161,7 @@ function AppContent() {
     setMode(newMode);
     setError('');
     setSuccess('');
-    // Don't reset verification message here as it might be needed for registration success
+    setShowVerificationMessage(false);
     setForm({ username: '', email: '', password: '' });
   };
 
@@ -243,45 +209,104 @@ function AppContent() {
         posts={filteredPosts}
         loading={postsLoading}
         error={postsError}
-        success={success}
         user={user}
-        showVerificationMessage={showVerificationMessage}
-        onDismissVerification={dismissVerificationMessage}
-        viewingUserPosts={viewingUserPosts}
-        formatDate={formatDate}
-        comments={loadedComments}
-        newComment={newComment}
-        editingPost={editingPost}
-        likedPosts={likedPosts}
         onLogout={handleLogout}
-        onUserClick={(user) => {
-          setSelectedUser(user);
-          setShowUserModal(true);
-        }}
-        onCreatePost={() => setMode('create-post')}
-        onBackToFeed={() => setViewingUserPosts(null)}
-        onEditPost={(post) => setEditingPost(post)}
-        onDeletePost={(postId) => deletePostMutation.mutate({ postId, tokenManager: { accessToken, refreshAccessToken } })}
-        onUpdatePost={(postId, text) => updatePostMutation.mutate({ postId, text, tokenManager: { accessToken, refreshAccessToken } })}
-        onLikePost={(postId, isLiked) => likePostMutation.mutate({ postId, isLiked, tokenManager: { accessToken, refreshAccessToken } })}
-        onLoadComments={(postId) => {
-          if (!loadedComments[postId]) {
-            getComments(postId).then(comments => {
-              setLoadedComments(prev => ({ ...prev, [postId]: comments }));
-            });
+        onUserClick={async (userId) => {
+          console.log('onUserClick called with userId:', userId);
+          try {
+            const userData = await getUserById(userId, tokenManager);
+            console.log('User data received:', userData);
+            if (userData) {
+              setSelectedUser(userData);
+              setShowUserModal(true);
+              console.log('Modal should be showing now');
+            } else {
+              console.log('No user data received');
+            }
+          } catch (error) {
+            console.error('Error fetching user:', error);
+            // Fallback to minimal user object if API fails
+            setSelectedUser({ id: userId, username: 'User' });
+            setShowUserModal(true);
           }
         }}
-        onCreateComment={(postId, comment) => createCommentMutation.mutate({ postId, commentData: comment, tokenManager: { accessToken, refreshAccessToken } })}
+        onViewUserPosts={async (userId) => {
+          try {
+            const userData = await getUserById(userId, tokenManager);
+            if (userData) {
+              setViewingUserPosts(userData);
+            } else {
+              // Fallback to minimal user object if API fails
+              setViewingUserPosts({ id: userId, username: 'User' });
+            }
+          } catch (error) {
+            console.error('Error fetching user:', error);
+            // Fallback to minimal user object if API fails
+            setViewingUserPosts({ id: userId, username: 'User' });
+          }
+        }}
+        onClearUserPosts={() => setViewingUserPosts(null)}
+        onBackToFeed={() => setViewingUserPosts(null)}
+        onLikePost={(postId, isLiked) => likePostMutation.mutate({ postId, isLiked, tokenManager })}
+        onUnlikePost={(postId, isLiked) => likePostMutation.mutate({ postId, isLiked, tokenManager })}
+        likedPosts={likedPosts}
+        onEditPost={(post) => setEditingPost(post)}
+        onDeletePost={(postId) => deletePostMutation.mutate({ postId, tokenManager })}
+        onUpdatePost={(postId, text) => updatePostMutation.mutate({ postId, text, tokenManager })}
+        onCreateComment={(postId, comment) => {
+          createCommentMutation.mutate(
+            { postId, commentData: { text: comment }, tokenManager },
+            {
+              onSuccess: (newComment) => {
+                // Update local comments state
+                setLoadedComments(prev => ({
+                  ...prev,
+                  [postId]: [...(prev[postId] || []), newComment]
+                }));
+                // Clear the input field
+                setNewComment(prev => ({
+                  ...prev,
+                  [postId]: ''
+                }));
+              }
+            }
+          );
+        }}
+        onLoadComments={(postId) => {
+          if (!loadedComments[postId]) {
+            getComments(postId, tokenManager)
+              .then(comments => {
+                setLoadedComments(prev => ({ ...prev, [postId]: comments }));
+              })
+              .catch(error => {
+                console.error('Failed to load comments:', error);
+              });
+          }
+        }}
+        loadedComments={loadedComments}
         onNewCommentChange={(postId, text) => {
           setNewComment(prev => ({ ...prev, [postId]: text }));
         }}
+        newComment={newComment}
+        onClearNewComment={(postId) => {
+          setNewComment(prev => ({ ...prev, [postId]: '' }));
+        }}
         onCancelEdit={() => setEditingPost(null)}
+        onCreatePost={() => setMode('create-post')}
+        showVerificationMessage={showVerificationMessage}
+        onDismissVerification={() => setShowVerificationMessage(false)}
+        editingPost={editingPost?.id}
+        viewingUserPosts={viewingUserPosts}
+        success={success}
+        comments={loadedComments}
+        formatDate={formatDate}
       />
 
       {/* Modals */}
+
       {showUserModal && selectedUser && (
         <UserModal
-          user={selectedUser}
+          selectedUser={selectedUser}
           onClose={() => {
             setShowUserModal(false);
             setSelectedUser(null);
@@ -291,22 +316,44 @@ function AppContent() {
             setShowUserModal(false);
             setSelectedUser(null);
           }}
+          getRandomAvatar={getRandomAvatar}
+        />
+      )}
+
+      {mode === 'create-post' && (
+        <CreatePostModal
+          newPost={newPost}
+          loading={createPostMutation.isLoading}
+          onClose={() => setMode('feed')}
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (newPost.text.trim()) {
+              createPostMutation.mutate({ postData: { text: newPost.text }, tokenManager });
+              setNewPost({ text: '' });
+              setMode('feed');
+            }
+          }}
+          onTextChange={(e) => setNewPost({ text: e.target.value })}
         />
       )}
 
       {editingPost && (
         <CreatePostModal
-          mode="edit"
-          post={editingPost}
+          newPost={{ text: editingPost.text }}
+          loading={updatePostMutation.isLoading}
           onClose={() => setEditingPost(null)}
-          onSubmit={(updatedPost) => {
-            updatePostMutation.mutate({ 
-              postId: updatedPost.id, 
-              text: updatedPost.text, 
-              tokenManager: { accessToken, refreshAccessToken } 
-            });
-            setEditingPost(null);
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (editingPost.text.trim()) {
+              updatePostMutation.mutate({ 
+                postId: editingPost.id, 
+                text: editingPost.text, 
+                tokenManager 
+              });
+              setEditingPost(null);
+            }
           }}
+          onTextChange={(e) => setEditingPost({ ...editingPost, text: e.target.value })}
         />
       )}
     </div>
