@@ -38,35 +38,23 @@ const EmailVerification = () => {
   }, [searchParams]);
 
   const handleRedirect = () => {
-    // Ensure proper page sizing and alignment when redirecting
-    document.body.style.fontSize = '16px';
-    document.documentElement.style.fontSize = '16px';
-    document.body.style.margin = '0';
-    document.body.style.padding = '0';
-    document.documentElement.style.margin = '0';
-    document.documentElement.style.padding = '0';
-    
-    // Force a reflow to ensure proper layout
-    setTimeout(() => {
-      window.scrollTo(0, 0);
-      navigate('/');
-    }, 100);
+    navigate('/');
   };
 
   return (
-    <div className="auth-container card fade-in">
-      <h1 className="font-extrabold text-3xl mb-8 text-center">
-        <span style={{ background: 'var(--accent-gradient)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>chatr</span>
+    <div className="auth-container card fade-in" style={{ maxWidth: '450px', minHeight: '350px' }}>
+      <h1 className="font-extrabold text-3xl mb-8 text-center" style={{ textAlign: 'center', width: '100%' }}>
+        chatr
       </h1>
       
       {status === 'verifying' && (
         <div style={{ 
-          textAlign: 'center', 
           display: 'flex', 
           flexDirection: 'column', 
+          justifyContent: 'center', 
           alignItems: 'center',
-          justifyContent: 'center',
-          flex: 1
+          height: '100%',
+          minHeight: '300px'
         }}>
           <p className="loading">Verifying your email<span className="loading-dots"></span></p>
         </div>
@@ -74,45 +62,15 @@ const EmailVerification = () => {
       
       {status === 'success' && (
         <div style={{ 
-          textAlign: 'center', 
           display: 'flex', 
           flexDirection: 'column', 
+          justifyContent: 'center', 
           alignItems: 'center',
-          justifyContent: 'center',
-          flex: 1
+          height: '100%',
+          minHeight: '300px'
         }}>
-          <p style={{ 
-            fontSize: '1.1rem', 
-            color: 'var(--text-primary)', 
-            marginBottom: '2.5rem',
-            lineHeight: '1.6',
-            maxWidth: '400px'
-          }}>
-            {message}
-          </p>
-          <button 
-            onClick={handleRedirect} 
-            style={{
-              background: 'var(--accent-gradient)',
-              color: 'white',
-              border: 'none',
-              borderRadius: '10px',
-              padding: '0.6rem 1.2rem',
-              fontSize: '0.85rem',
-              fontWeight: '600',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-              boxShadow: '0 4px 15px rgba(139, 92, 246, 0.4)'
-            }}
-            onMouseOver={(e) => {
-              e.target.style.transform = 'translateY(-2px)';
-              e.target.style.boxShadow = '0 8px 25px rgba(139, 92, 246, 0.6)';
-            }}
-            onMouseOut={(e) => {
-              e.target.style.transform = 'translateY(0)';
-              e.target.style.boxShadow = '0 4px 15px rgba(139, 92, 246, 0.4)';
-            }}
-          >
+          <p style={{ color: 'var(--success)', fontSize: '1rem', marginBottom: '2rem', textAlign: 'center' }}>{message}</p>
+          <button onClick={handleRedirect} className="btn btn-primary">
             Continue to Login
           </button>
         </div>
@@ -120,46 +78,16 @@ const EmailVerification = () => {
       
       {status === 'error' && (
         <div style={{ 
-          textAlign: 'center', 
           display: 'flex', 
           flexDirection: 'column', 
+          justifyContent: 'center', 
           alignItems: 'center',
-          justifyContent: 'center',
-          flex: 1
+          height: '100%',
+          minHeight: '300px'
         }}>
-          <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>❌</div>
-          <p style={{ 
-            fontSize: '1.1rem', 
-            color: 'var(--error)', 
-            marginBottom: '2.5rem',
-            lineHeight: '1.6',
-            maxWidth: '400px'
-          }}>
-            {message}
-          </p>
-          <button 
-            onClick={handleRedirect} 
-            style={{
-              background: 'var(--glass-bg)',
-              backdropFilter: 'blur(16px)',
-              color: 'var(--text-primary)',
-              border: '1px solid var(--glass-border)',
-              borderRadius: '10px',
-              padding: '0.6rem 1.2rem',
-              fontSize: '0.85rem',
-              fontWeight: '600',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease'
-            }}
-            onMouseOver={(e) => {
-              e.target.style.background = 'rgba(255, 255, 255, 0.2)';
-              e.target.style.transform = 'translateY(-2px)';
-            }}
-            onMouseOut={(e) => {
-              e.target.style.background = 'var(--glass-bg)';
-              e.target.style.transform = 'translateY(0)';
-            }}
-          >
+          <div className="error-icon mb-4 text-4xl">❌</div>
+          <p className="error mb-4">{message}</p>
+          <button onClick={handleRedirect} className="btn btn-secondary">
             Go to Login
           </button>
         </div>
