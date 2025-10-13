@@ -15,10 +15,11 @@ class Settings(BaseSettings):
     smtp_username: str
     smtp_password: str
     smtp_admin_email: str
+    smtp_default_from_email:str
     environment: str = "local"
 
     class Config:
-        env_file = "env.config"
+        env_file = ".env.config"
 
 
 settings = Settings()

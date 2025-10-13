@@ -120,12 +120,13 @@ def send_verification_email(user_email,token,username):
     try:
         smtp_server=settings.smtp_host
         smtp_port=settings.smtp_port
-        smtp_username=settings.smtp_username
+        smtp_from_email=settings.smtp_default_from_email
         smtp_password=settings.smtp_password
+        smtp_username=settings.smtp_username
 
 
         msg = MIMEMultipart()
-        msg["From"] = smtp_username
+        msg["From"] = smtp_from_email
         msg["To"] = user_email
         msg["Subject"] = "Verify Your Email Address"
 
