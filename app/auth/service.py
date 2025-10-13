@@ -130,7 +130,7 @@ def send_verification_email(user_email,token,username):
         msg["To"] = user_email
         msg["Subject"] = "Verify Your Email Address"
 
-        verification_url = f"http://{settings.cors_allowed_origins}/verify-email?token={token}"
+        verification_url = f"{settings.cors_allowed_origins}/verify-email?token={token}"
 
         body = f"""
         Hello {username}!
