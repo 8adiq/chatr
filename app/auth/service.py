@@ -1,4 +1,4 @@
-from datetime import datetime,timedelta
+from datetime import datetime,timedelta,timezone
 from jose import jwt, JWTError
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi import HTTPException, Depends,status
@@ -175,13 +175,16 @@ def validate_email_token(token,db: Session) -> bool:
     if not verification_token:
         return False
     
-    if verification_token.expired_at < datetime.utcnow():
+
+    now_utc = datetime.now(timezone.utc)
+
+    if verification_token.expired_at < now_utc:
         return False
     
     if verification_token.used_at:
         return False
     
-    verification_token.used_at = datetime.utcnow()
+    verification_token.used_at = now_utc
 
     user = db.query(User).filter(User.id == verification_token.user_id).first()
 
