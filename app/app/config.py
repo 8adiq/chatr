@@ -20,7 +20,7 @@ class Settings(BaseSettings):
 
     class Config:
         # env_file = ".env.config"
-        env_file = ".env.config" if os.path.exists(".env.config") else None
+        # env_file = ".env.config" if os.path.exists(".env.config") else None
         env_file_encoding = "utf-8"
 
 
