@@ -1,13 +1,13 @@
 from fastapi import APIRouter, HTTPException,Depends, status
 from sqlalchemy.orm import Session
 from typing import List
-from app.users.models import User
-from app.users.schema import UserResponse
-from app.auth.service import get_user_details
-from app.database.main import get_db_session
-from app.users.service import UserService
-from app.posts.service import PostService
-from app.posts.schema import PostPublic
+from backend.users.models import User
+from backend.users.schema import UserResponse
+from backend.auth.service import get_user_details
+from backend.database.main import get_db_session
+from backend.users.service import UserService
+from backend.posts.service import PostService
+from backend.posts.schema import PostPublic
 
 
 router = APIRouter()

@@ -7,8 +7,8 @@ from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime
 import os
 import logging
-from database.main import init_db
-from config import settings
+from backend.database.main import init_db
+from backend.config import settings
 
 # setting up logging
 logging.basicConfig(level=logging.INFO)
@@ -65,11 +65,11 @@ app.add_middleware(
 )
 
 # Include modular routers
-from app.auth.routes import router as auth_router
-from app.users.routes import router as users_router
-from app.posts.routes import router as posts_router
-from app.comments.routes import router as comments_router
-from app.likes.routes import router as likes_router
+from backend.auth.routes import router as auth_router
+from backend.users.routes import router as users_router
+from backend.posts.routes import router as posts_router
+from backend.comments.routes import router as comments_router
+from backend.likes.routes import router as likes_router
 
 app.include_router(auth_router, prefix='/api', tags=['auth'])
 app.include_router(users_router, prefix='/api', tags=['users'])

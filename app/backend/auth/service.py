@@ -3,10 +3,10 @@ from jose import jwt, JWTError
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi import HTTPException, Depends,status
 from sqlalchemy.orm import Session
-from app.users.models import User
-from app.auth.model import EmailVerificationToken
-from app.database.main import get_db_session
-from app.config import settings
+from backend.users.models import User
+from backend.auth.model import EmailVerificationToken
+from backend.database.main import get_db_session
+from backend.config import settings
 import bcrypt
 import uuid
 from datetime import datetime, timedelta

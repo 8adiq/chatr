@@ -1,11 +1,11 @@
 from fastapi import APIRouter, HTTPException,Depends, status
 from sqlalchemy.orm import Session
 from typing import List
-from app.users.models import User
-from app.posts.schema import PostPublic,PostCreate,PostBase
-from app.auth.service import get_user_details
-from app.database.main import get_db_session
-from app.posts.service import PostService
+from backend.users.models import User
+from backend.posts.schema import PostPublic,PostCreate,PostBase
+from backend.auth.service import get_user_details
+from backend.database.main import get_db_session
+from backend.posts.service import PostService
 from datetime import datetime
 
 

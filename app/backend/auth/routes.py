@@ -1,12 +1,12 @@
 from fastapi import APIRouter, HTTPException,Depends, status,BackgroundTasks
 from sqlalchemy.orm import Session
 from typing import List
-from app.users.models import User
-from app.users.schema import UserCreate,UserResponse,UserLogin
-from app.auth.schema import TokenResponse,RequestTokenResponse,EmailVerificationRequest,EmailVerificationResponse
-from app.auth.service import create_access_token,create_refresh_token,verify_token,validate_email_token,send_verification_email,create_verification_token
-from app.database.main import get_db_session
-from app.users.service import UserService
+from backend.users.models import User
+from backend.users.schema import UserCreate,UserResponse,UserLogin
+from backend.auth.schema import TokenResponse,RequestTokenResponse,EmailVerificationRequest,EmailVerificationResponse
+from backend.auth.service import create_access_token,create_refresh_token,verify_token,validate_email_token,send_verification_email,create_verification_token
+from backend.database.main import get_db_session
+from backend.users.service import UserService
 
 
 router = APIRouter()

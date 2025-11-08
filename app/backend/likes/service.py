@@ -1,8 +1,8 @@
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
 from fastapi import HTTPException, status,Depends
-from app.posts.models import Post
-from app.likes.models import  Like
+from backend.posts.models import Post
+from backend.likes.models import  Like
 from typing import List
 
 class LikeService:

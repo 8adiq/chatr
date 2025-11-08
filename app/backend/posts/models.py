@@ -1,7 +1,7 @@
 from sqlalchemy import Column, String, ForeignKey, DateTime, func
 from sqlalchemy.orm import relationship
 import uuid
-from app.database.main import Base
+from backend.database.main import Base
 
 
 class Post(Base):
