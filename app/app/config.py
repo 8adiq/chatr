@@ -28,5 +28,11 @@ class Settings(BaseSettings):
         env_file_encoding = "utf-8"
 
 
+# Don't initialize here
+settings = None
 
-settings = Settings()
+def get_settings():
+    global settings
+    if settings is None:
+        settings = Settings()
+    return settings

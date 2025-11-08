@@ -8,7 +8,7 @@ from datetime import datetime
 import os
 import logging
 from app.database.main import init_db
-from app.config import settings
+from app.config import get_settings
 
 # setting up logging
 logging.basicConfig(level=logging.INFO)
@@ -53,6 +53,8 @@ async def general_exception_handler(request:Request,exc : Exception):
         }
     )
 
+
+settings = get_settings()
 allowed_origins = settings.cors_allowed_origins.split(",")
 
 # CORS middleware connecting to the frontend
