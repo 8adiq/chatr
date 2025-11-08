@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base, Session
 import os
-from backend.config import settings
+from app.config import settings
 
 
 # db setup

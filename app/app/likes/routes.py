@@ -1,11 +1,11 @@
 from fastapi import APIRouter, HTTPException,Depends, status
 from sqlalchemy.orm import Session
 from typing import List
-from backend.users.models import User
-from backend.likes.schema import LikeResponse,LikeCreate
-from backend.auth.service import get_user_details
-from backend.database.main import get_db_session
-from backend.likes.service import LikeService
+from app.users.models import User
+from app.likes.schema import LikeResponse,LikeCreate
+from app.auth.service import get_user_details
+from app.database.main import get_db_session
+from app.likes.service import LikeService
 from datetime import datetime
 
 

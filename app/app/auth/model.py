@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey,func
 from sqlalchemy.orm import relationship
 import uuid
-from backend.database.main import Base
+from app.database.main import Base
 
 
 class EmailVerificationToken(Base):

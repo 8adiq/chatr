@@ -1,9 +1,9 @@
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
 from fastapi import HTTPException, status,Depends
-from backend.posts.models import Post
-from backend.comments.models import Comment
-from backend.comments.schema import CommentBase
+from app.posts.models import Post
+from app.comments.models import Comment
+from app.comments.schema import CommentBase
 from datetime import datetime
 from typing import List
 

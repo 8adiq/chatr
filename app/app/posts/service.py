@@ -3,11 +3,11 @@ from sqlalchemy import func
 from fastapi import HTTPException, status,Depends
 from fastapi.security import HTTPAuthorizationCredentials,HTTPBearer
 from jose import jwt, JWTError
-from backend.posts.models import Post
-from backend.users.models import User
-from backend.comments.models import Comment
-from backend.likes.models import Like
-from backend.posts.schema import PostCreate, PostBase
+from app.posts.models import Post
+from app.users.models import User
+from app.comments.models import Comment
+from app.likes.models import Like
+from app.posts.schema import PostCreate, PostBase
 
 from datetime import datetime
 from typing import List

@@ -3,9 +3,9 @@ from sqlalchemy import func
 from fastapi import HTTPException, status,Depends
 from fastapi.security import HTTPAuthorizationCredentials,HTTPBearer
 from jose import jwt, JWTError
-from backend.users.models import User
-from backend.users.schema import UserCreate, UserLogin
-from backend.auth.service import hash_password, verify_password
+from app.users.models import User
+from app.users.schema import UserCreate, UserLogin
+from app.auth.service import hash_password, verify_password
 from datetime import datetime
 from typing import List
 

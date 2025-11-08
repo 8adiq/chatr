@@ -1,12 +1,12 @@
 from fastapi import APIRouter, HTTPException,Depends, status
 from sqlalchemy.orm import Session
 from typing import List
-from backend.users.models import User
-from backend.comments.models import Comment
-from backend.comments.schema import CommentBase,CommentPublic
-from backend.auth.service import get_user_details
-from backend.database.main import get_db_session
-from backend.comments.service import CommentService
+from app.users.models import User
+from app.comments.models import Comment
+from app.comments.schema import CommentBase,CommentPublic
+from app.auth.service import get_user_details
+from app.database.main import get_db_session
+from app.comments.service import CommentService
 from datetime import datetime
 
 

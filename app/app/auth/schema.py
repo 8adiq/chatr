@@ -1,5 +1,5 @@
 from pydantic import BaseModel,EmailStr
-from backend.users.schema import UserResponse
+from app.users.schema import UserResponse
 
 class TokenResponse(BaseModel):
     user: UserResponse
