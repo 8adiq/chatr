@@ -7,7 +7,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime
 import os
 import logging
-from app.database.main import init_db
+from database.main import init_db
 from app.config import settings
 
 # setting up logging
