@@ -8,7 +8,7 @@ from datetime import datetime
 import os
 import logging
 from database.main import init_db
-from app.config import settings
+from config import settings
 
 # setting up logging
 logging.basicConfig(level=logging.INFO)
