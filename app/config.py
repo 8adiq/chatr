@@ -2,11 +2,6 @@ import os
 from pydantic_settings import BaseSettings
 from pydantic import Field
 
-print("SECRET_KEY:", os.getenv("SECRET_KEY"))
-print("DATABASE_URL:", os.getenv("DATABASE_URL"))
-print("SMTP_HOST:", os.getenv("SMTP_HOST"))
-
-
 class Settings(BaseSettings):
     app_name: str = 'chatr'
     secret_key: str = Field(min_length=32)
@@ -23,9 +18,9 @@ class Settings(BaseSettings):
     environment: str = "local"
 
     class Config:
-        # env_file = ".env.config"
-        env_file = ".env.config" if os.path.exists(".env.config") else None
-        env_file_encoding = "utf-8"
+
+        # In a Docker environment, variables are passed directly, so we don't load a .env file.
+        env_file = '.env'
 
 
 # Don't initialize here
