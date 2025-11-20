@@ -6,7 +6,6 @@ __pycache__/
 users.db
 test_users.db
 *.db
-auth-app-frontend/
 migrations/
 docker-compose.yaml
 Dockerfile
@@ -19,3 +18,5 @@ reset_database.py
 CODE_REVIEW_REPORT.md
 CLAUDE.md
 TEST_REPORT.md
+VERCEL_DEPLOYMENT.md
+auth-app-frontend/node_modules/
