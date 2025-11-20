@@ -5,3 +5,4 @@ __pycache__/
 .env.config
 app/test.py
 reset_database.py
+.vercel
