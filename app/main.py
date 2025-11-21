@@ -16,6 +16,8 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Authentication API")
 
+print("SECRET_KEY:", os.getenv("SECRET_KEY"))
+print("BREVO_API_KEY:", os.getenv("BREVO_API_KEY"))
 
 
 # Global exception handlers
