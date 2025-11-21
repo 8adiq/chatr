@@ -82,21 +82,18 @@ app.include_router(likes_router, prefix='/api', tags=['likes'])
 
 @app.get("/health")
 async def health_check():
-    """Health check endpoint for monitoring"""
     return {"status": "healthy", "timestamp": datetime.utcnow().isoformat()}
 
 @app.on_event("startup")
 async def startup():
-    """ initializing database on startup"""
     try:
         init_db()
         logger.info("Database initialized successfully.")  
     except Exception as e:
         logger.error(f"Error initializing database: {str(e)}")
-
-# app.mount("/", StaticFiles(directory="auth-app-frontend/dist", html=True), name="static")
+    logger.info(f"App started on port {os.environ.get('PORT', 8000)}")
 
 if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 8000))
-    uvicorn.run(app, host="0.0.0.0", port=port, reload=True)
+    uvicorn.run(app, host="0.0.0.0", port=port)
