@@ -88,10 +88,15 @@ async def health_check():
 @app.on_event("startup")
 async def startup():
     """ initializing database on startup"""
-    init_db()
+    try:
+        init_db()
+        logger.info("Database initialized successfully.")  
+    except Exception as e:
+        logger.error(f"Error initializing database: {str(e)}")
 
 # app.mount("/", StaticFiles(directory="auth-app-frontend/dist", html=True), name="static")
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True) 
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port, reload=True)
