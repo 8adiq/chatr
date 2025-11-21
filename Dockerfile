@@ -1,40 +1,34 @@
-# Use a modern, slim Python image as a base for a smaller final image.
+# Base image
 FROM python:3.11-slim
 
-# Set the working directory inside the container.
+# Working directory
 WORKDIR /app
 
-# Create a non-root user and group to run the application for better security.
-# This prevents the application from running with root privileges.
+# Non-root user
 RUN addgroup --system app && adduser --system --group app
 
-# Install system-level dependencies required by some Python packages (like psycopg2-binary).
-# Using --no-install-recommends keeps the image size smaller.
+# System dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy only the requirements file first to leverage Docker's layer caching.
-# This layer will only be rebuilt if your dependencies in requirements.txt change.
+# Copy requirements and install dependencies
 COPY requirements.txt .
-
-# Install the Python dependencies.
-# --no-cache-dir reduces the image size by not storing the pip cache.
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of your application code into the container.
+# Copy application code
 COPY . .
 
-# Change the ownership of all application files to the non-root user.
+# Change ownership
 RUN chown -R app:app /app
 
-# Switch to the non-root user to run the application.
+# Switch to non-root user
 USER app
 
-# Expose the port the app will run on. Railway will automatically detect and use this.
-EXPOSE 8000
+# Use Railway's dynamic port
+ENV PORT 8080
+EXPOSE $PORT
 
-# Define the command to run your application when the container starts.
-# This correctly points to the 'app' object inside your 'app/main.py' file.
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Command to run the app with dynamic port
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT} --log-level info --access-log"]
