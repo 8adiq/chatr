@@ -21,6 +21,7 @@ email_validator==2.2.0
 Faker==37.11.0
 fonttools==4.60.1
 greenlet==3.2.4
+h11==0.16.0
 idna==3.10
 iniconfig==2.1.0
 kiwisolver==1.4.9
@@ -52,3 +53,4 @@ sqlparse==0.5.3
 typing_extensions==4.15.0
 tzdata==2025.2
 urllib3==2.5.0
+uvicorn==0.38.0
