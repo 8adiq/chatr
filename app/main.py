@@ -80,20 +80,60 @@ app.include_router(comments_router, prefix='/api', tags=['comments'])
 app.include_router(likes_router, prefix='/api', tags=['likes'])
 
 
+# @app.get("/health")
+# async def health_check():
+#     return {"status": "healthy", "timestamp": datetime.utcnow().isoformat()}
+
+# @app.on_event("startup")
+# async def startup():
+#     try:
+#         init_db()
+#         logger.info("Database initialized successfully.")  
+#     except Exception as e:
+#         logger.error(f"Error initializing database: {str(e)}")
+#     logger.info(f"App started on port {os.environ.get('PORT', 8000)}")
+
+# if __name__ == "__main__":
+#     import uvicorn
+#     port = int(os.environ.get("PORT", 8000))
+#     uvicorn.run(app, host="0.0.0.0", port=port)
+
+# -------------------------
+# Healthcheck Endpoint
+# -------------------------
 @app.get("/health")
 async def health_check():
+    """Health check endpoint for monitoring"""
     return {"status": "healthy", "timestamp": datetime.utcnow().isoformat()}
 
+# -------------------------
+# Startup Event
+# -------------------------
 @app.on_event("startup")
 async def startup():
+    """Initialize database on startup"""
     try:
         init_db()
-        logger.info("Database initialized successfully.")  
+        logger.info("Database initialized successfully.")
     except Exception as e:
         logger.error(f"Error initializing database: {str(e)}")
-    logger.info(f"App started on port {os.environ.get('PORT', 8000)}")
 
+# -------------------------
+# Serve Frontend (Optional)
+# -------------------------
+# app.mount("/", StaticFiles(directory="auth-app-frontend/dist", html=True), name="static")
+
+# -------------------------
+# Main
+# -------------------------
 if __name__ == "__main__":
     import uvicorn
-    port = int(os.environ.get("PORT", 8000))
-    uvicorn.run(app, host="0.0.0.0", port=port)
+
+    port = int(os.environ.get("PORT", 8080))
+    uvicorn.run(
+        "app.main:app",  # Adjust if your file structure is different
+        host="0.0.0.0",
+        port=port,
+        log_level="info",      # ensures INFO logs are correctly classified
+        access_log=True        # logs requests for debugging
+    )
