@@ -59,7 +59,7 @@ class Settings(BaseSettings):
     brevo_api_key: str = Field(..., env="BREVO_API_KEY")
 
     class Config:
-        env_file = ".env"        # Local dev .env
+        # env_file = ".env"        # Local dev .env
         env_file_encoding = "utf-8"
         case_sensitive = True    # Ensure variable names match exactly
 
