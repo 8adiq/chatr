@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     smtp_password: str
     smtp_admin_email: str
     smtp_default_from_email:str
+    brevo_api_key: str
     environment: str = "local"
 
     class Config:

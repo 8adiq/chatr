@@ -13,6 +13,8 @@ from datetime import datetime, timedelta
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from sib_api_v3_sdk import Configuration, ApiClient, TransactionalEmailsApi, SendSmtpEmail
+from sib_api_v3_sdk.rest import ApiException
 
 
 SECRET_KEY = settings.secret_key
@@ -115,56 +117,99 @@ def create_verification_token(user_id, db: Session):
     db.refresh(verification_token)  
     return verification_token
 
-def send_verification_email(user_email,token,username):
-    """sending verification to user after registration"""
+# def send_verification_email(user_email,token,username):
+#     """sending verification to user after registration"""
+#     try:
+#         smtp_server=settings.smtp_host
+#         smtp_port=settings.smtp_port
+#         smtp_from_email=settings.smtp_default_from_email
+#         smtp_password=settings.smtp_password
+#         smtp_username=settings.smtp_username
+
+
+#         msg = MIMEMultipart()
+#         msg["From"] = smtp_from_email
+#         msg["To"] = user_email
+#         msg["Subject"] = "Verify Your Email Address"
+
+#         verification_url = f"{settings.cors_allowed_origins}/verify-email?token={token}"
+
+#         body = f"""
+#         Hello {username}!
+        
+#         Thank you for registering. Please verify your email address by clicking the link below:
+        
+#         {verification_url}
+        
+#         This link will expire in 24 hours.
+        
+#         If you didn't create an account, please ignore this email.
+        
+#         Best regards,
+#         Your App Team
+#         """
+
+#         msg.attach(MIMEText(body,'plain'))
+
+#         if smtp_port == 465:
+#             server = smtplib.SMTP_SSL(smtp_server,smtp_port)
+#             print("Using SSL connection")
+#         else:
+#             server = smtplib.SMTP(smtp_server,smtp_port)
+#             print("Starting TLS")
+#             server.starttls()
+
+#         server.login(smtp_username,smtp_password)
+#         server.send_message(msg)
+#         server.quit()
+
+#         return True
+
+#     except Exception as e:
+#         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,detail=f"Error sending email :{e}")
+
+# settings = get_settings()
+
+def send_verification_email(user_email: str, token: str, username: str):
+    """Send verification email using Brevo Transactional Email API"""
     try:
-        smtp_server=settings.smtp_host
-        smtp_port=settings.smtp_port
-        smtp_from_email=settings.smtp_default_from_email
-        smtp_password=settings.smtp_password
-        smtp_username=settings.smtp_username
-
-
-        msg = MIMEMultipart()
-        msg["From"] = smtp_from_email
-        msg["To"] = user_email
-        msg["Subject"] = "Verify Your Email Address"
-
+        # Build verification URL
         verification_url = f"{settings.cors_allowed_origins}/verify-email?token={token}"
 
-        body = f"""
-        Hello {username}!
-        
-        Thank you for registering. Please verify your email address by clicking the link below:
-        
-        {verification_url}
-        
-        This link will expire in 24 hours.
-        
-        If you didn't create an account, please ignore this email.
-        
-        Best regards,
-        Your App Team
-        """
+        # Configure Brevo API
+        configuration = Configuration()
+        configuration.api_key['api-key'] = settings.brevo_api_key  # Add BREVO_API_KEY to your env
 
-        msg.attach(MIMEText(body,'plain'))
+        api_instance = TransactionalEmailsApi(ApiClient(configuration))
 
-        if smtp_port == 465:
-            server = smtplib.SMTP_SSL(smtp_server,smtp_port)
-            print("Using SSL connection")
-        else:
-            server = smtplib.SMTP(smtp_server,smtp_port)
-            print("Starting TLS")
-            server.starttls()
+        # Construct the email
+        email = SendSmtpEmail(
+            sender={"name": "Your App Team", "email": settings.smtp_default_from_email},
+            to=[{"email": user_email, "name": username}],
+            subject="Verify Your Email Address",
+            html_content=f"""
+            <html>
+                <body>
+                    <p>Hello {username}!</p>
+                    <p>Thank you for registering. Please verify your email address by clicking the link below:</p>
+                    <p><a href="{verification_url}">Verify Email</a></p>
+                    <p>This link will expire in 24 hours.</p>
+                    <p>If you didn't create an account, please ignore this email.</p>
+                    <p>Best regards,<br>Your App Team</p>
+                </body>
+            </html>
+            """
+        )
 
-        server.login(smtp_username,smtp_password)
-        server.send_message(msg)
-        server.quit()
-
+        # Send the email
+        api_response = api_instance.send_transac_email(email)
         return True
 
-    except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,detail=f"Error sending email :{e}")
+    except ApiException as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error sending email: {e}"
+        )
 
 
 def validate_email_token(token,db: Session) -> bool:
