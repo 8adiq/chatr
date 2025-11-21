@@ -173,16 +173,14 @@ def create_verification_token(user_id, db: Session):
 def send_verification_email(user_email: str, token: str, username: str):
     """Send verification email using Brevo Transactional Email API"""
     try:
-        # Build verification URL
         verification_url = f"{settings.cors_allowed_origins}/verify-email?token={token}"
 
         # Configure Brevo API
         configuration = Configuration()
-        configuration.api_key['api-key'] = settings.brevo_api_key  # Add BREVO_API_KEY to your env
+        configuration.api_key['api-key'] = settings.brevo_api_key
 
         api_instance = TransactionalEmailsApi(ApiClient(configuration))
 
-        # Construct the email
         email = SendSmtpEmail(
             sender={"name": "Your App Team", "email": settings.smtp_default_from_email},
             to=[{"email": user_email, "name": username}],
@@ -201,16 +199,14 @@ def send_verification_email(user_email: str, token: str, username: str):
             """
         )
 
-        # Send the email
         api_response = api_instance.send_transac_email(email)
+        print(f"Verification email sent to {user_email}")
         return True
 
     except ApiException as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error sending email: {e}"
-        )
-
+        # Log the error instead of raising HTTPException
+        print(f"Failed to send verification email to {user_email}: {e}")
+        return False
 
 def validate_email_token(token,db: Session) -> bool:
     """validate the token returned after the user verifies their email"""
