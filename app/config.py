@@ -172,15 +172,10 @@
 
 from pydantic_settings import BaseSettings
 from pydantic import Field
-import os
 
 class Settings(BaseSettings):
-    secret_key: str = Field(..., min_length=32, env="SECRET_KEY")
+    secret_key: str = Field(..., env="SECRET_KEY")
     database_url: str = Field(..., env="DATABASE_URL")
-    cors_allowed_origins: str = Field("http://localhost:3000", env="CORS_ALLOWED_ORIGINS")
-    access_token_expires_minutes: int = Field(30, ge=1, le=1440, env="ACCESS_TOKEN_EXPIRES_MINUTES")
-    refresh_token_expires_days: int = Field(7, env="REFRESH_TOKEN_EXPIRES_DAYS")
-    environment: str = Field("local", env="ENVIRONMENT")
 
     smtp_host: str = Field(..., env="SMTP_HOST")
     smtp_port: int = Field(..., env="SMTP_PORT")
@@ -194,23 +189,25 @@ class Settings(BaseSettings):
     class Config:
         case_sensitive = True
 
-        # Ensures it reads directly from os.environ
         @classmethod
         def customise_sources(cls, init_settings, env_settings, file_secret_settings):
             return (
-                env_settings,  # load from environment variables
-                init_settings, # load from constructor args
-                file_secret_settings, # load from secret files if any
+                env_settings,         # read from os.environ first
+                init_settings,        # constructor args second
+                file_secret_settings, # any secret files third
             )
 
-# Singleton
+# Singleton pattern
 _settings: Settings | None = None
 
 def get_settings() -> Settings:
     global _settings
     if _settings is None:
         _settings = Settings()
-        print("Loaded SECRET_KEY:", _settings.secret_key)
-        print("Loaded SMTP_PORT:", _settings.smtp_port)
-        print("Loaded BREVO_API_KEY:", _settings.brevo_api_key)
+        # debug prints
+        print("SECRET_KEY:", _settings.secret_key)
+        print("SMTP_HOST:", _settings.smtp_host)
+        print("SMTP_PORT:", _settings.smtp_port)
+        print("BREVO_API_KEY:", _settings.brevo_api_key)
     return _settings
+
