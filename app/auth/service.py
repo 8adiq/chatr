@@ -198,7 +198,11 @@ def send_verification_email(user_email: str, token: str, username: str):
                     <p>Best regards,<br>Chatr Team</p>
                 </body>
             </html>
-            """
+            """,
+            # Disable click tracking for this email
+            params={
+                "DISABLE_CLICK_TRACKING": True
+            }
         )
 
         api_response = api_instance.send_transac_email(email)
