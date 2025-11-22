@@ -99,7 +99,8 @@
 
 
 import os
-from pydantic import BaseSettings, Field, validator
+from pydantic_settings import BaseSettings 
+from pydantic import Field, validator
 
 # ----------------------------
 # Settings class
