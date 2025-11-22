@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.users.models import User
 from app.auth.model import EmailVerificationToken
 from app.database.main import get_db_session
-from app.config import settings
+from app.config import settings,get_settings
 import bcrypt
 import uuid
 from datetime import datetime, timedelta
@@ -15,7 +15,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from sib_api_v3_sdk import Configuration, ApiClient, TransactionalEmailsApi, SendSmtpEmail
 from sib_api_v3_sdk.rest import ApiException
-from config import get_settings
+
 
 
 settings = get_settings()
