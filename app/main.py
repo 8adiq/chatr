@@ -115,6 +115,13 @@ async def health_check():
 @app.on_event("startup")
 async def startup():
     """Initialize database on startup"""
+    print("========= ENV DEBUG =========")
+    print("SECRET_KEY:", os.getenv("SECRET_KEY"))
+    print("BREVO_API_KEY:", os.getenv("BREVO_API_KEY"))
+    print("SMTP_DEFAULT_FROM_EMAIL:", os.getenv("SMTP_DEFAULT_FROM_EMAIL"))
+    print("SMTP_PORT:", os.getenv("SMTP_PORT"))
+    print("=============================")
+    
     try:
         init_db()
         logger.info("Database initialized successfully.")

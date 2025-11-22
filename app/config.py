@@ -39,24 +39,45 @@ from pydantic import Field
 
 class Settings(BaseSettings):
     # App settings
+    # app_name: str = "chatr"
+    # secret_key: str = Field(..., min_length=32)
+    # database_url: str
+    # cors_allowed_origins: str = "http://localhost:3000"
+    # access_token_expires_minutes: int = Field(30, ge=1, le=1440)
+    # refresh_token_expires_days: int = 7
+    # environment: str = "local"
+
+    # # SMTP / Email settings
+    # smtp_host: str
+    # smtp_port: int
+    # smtp_username: str
+    # smtp_password: str
+    # smtp_admin_email: str
+    # smtp_default_from_email: str
+
+    # # Brevo API key
+    # brevo_api_key: str = Field(..., env="BREVO_API_KEY")
+
+    # App settings
     app_name: str = "chatr"
-    secret_key: str = Field(..., min_length=32)
-    database_url: str
-    cors_allowed_origins: str = "http://localhost:3000"
-    access_token_expires_minutes: int = Field(30, ge=1, le=1440)
-    refresh_token_expires_days: int = 7
-    environment: str = "local"
+    secret_key: str = Field(..., min_length=32, env="SECRET_KEY")
+    database_url: str = Field(..., env="DATABASE_URL")
+    cors_allowed_origins: str = Field("http://localhost:3000", env="CORS_ALLOWED_ORIGINS")
+    access_token_expires_minutes: int = Field(30, ge=1, le=1440, env="ACCESS_TOKEN_EXPIRES_MINUTES")
+    refresh_token_expires_days: int = Field(7, env="REFRESH_TOKEN_EXPIRES_DAYS")
+    environment: str = Field("local", env="ENVIRONMENT")
 
     # SMTP / Email settings
-    smtp_host: str
-    smtp_port: int
-    smtp_username: str
-    smtp_password: str
-    smtp_admin_email: str
-    smtp_default_from_email: str
+    smtp_host: str = Field(..., env="SMTP_HOST")
+    smtp_port: int = Field(..., env="SMTP_PORT")
+    smtp_username: str = Field(..., env="SMTP_USERNAME")
+    smtp_password: str = Field(..., env="SMTP_PASSWORD")
+    smtp_admin_email: str = Field(..., env="SMTP_ADMIN_EMAIL")
+    smtp_default_from_email: str = Field(..., env="SMTP_DEFAULT_FROM_EMAIL")
 
     # Brevo API key
     brevo_api_key: str = Field(..., env="BREVO_API_KEY")
+
 
     class Config:
         env_file = None        # Local dev .env
