@@ -16,11 +16,6 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Authentication API")
 
-print("SECRET_KEY:", os.getenv("SECRET_KEY"))
-print("BREVO_API_KEY:", os.getenv("BREVO_API_KEY"))
-print("ALL ENV VARS:", os.environ)
-
-
 # Global exception handlers
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request : Request, exc : RequestValidationError):
@@ -83,23 +78,6 @@ app.include_router(comments_router, prefix='/api', tags=['comments'])
 app.include_router(likes_router, prefix='/api', tags=['likes'])
 
 
-# @app.get("/health")
-# async def health_check():
-#     return {"status": "healthy", "timestamp": datetime.utcnow().isoformat()}
-
-# @app.on_event("startup")
-# async def startup():
-#     try:
-#         init_db()
-#         logger.info("Database initialized successfully.")  
-#     except Exception as e:
-#         logger.error(f"Error initializing database: {str(e)}")
-#     logger.info(f"App started on port {os.environ.get('PORT', 8000)}")
-
-# if __name__ == "__main__":
-#     import uvicorn
-#     port = int(os.environ.get("PORT", 8000))
-#     uvicorn.run(app, host="0.0.0.0", port=port)
 
 # -------------------------
 # Healthcheck Endpoint
@@ -115,13 +93,7 @@ async def health_check():
 @app.on_event("startup")
 async def startup():
     """Initialize database on startup"""
-    print("========= ENV DEBUG =========")
-    print("SECRET_KEY:", os.getenv("SECRET_KEY"))
-    print("BREVO_API_KEY:", os.getenv("BREVO_API_KEY"))
-    print("SMTP_DEFAULT_FROM_EMAIL:", os.getenv("SMTP_DEFAULT_FROM_EMAIL"))
-    print("SMTP_PORT:", os.getenv("SMTP_PORT"))
-    print("=============================")
-    
+
     try:
         init_db()
         logger.info("Database initialized successfully.")
