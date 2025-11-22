@@ -31,4 +31,5 @@ ENV PORT 8080
 EXPOSE $PORT
 
 # Command to run the app with dynamic port
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT} --log-level info --access-log"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080", "--log-level", "info", "--access-log"]
+

@@ -80,7 +80,7 @@ class Settings(BaseSettings):
 
 
     class Config:
-        env_file = None        # Local dev .env
+        env_file = ".env"        # Local dev .env
         env_file_encoding = "utf-8"
         case_sensitive = True    # Ensure variable names match exactly
 
