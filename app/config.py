@@ -172,6 +172,7 @@
 
 from pydantic_settings import BaseSettings
 from pydantic import Field
+import os
 
 class Settings(BaseSettings):
     secret_key: str = Field(..., env="SECRET_KEY")
@@ -191,13 +192,14 @@ class Settings(BaseSettings):
 
         @classmethod
         def customise_sources(cls, init_settings, env_settings, file_secret_settings):
+            # Force reading from os.environ first
             return (
-                env_settings,         # read from os.environ first
-                init_settings,        # constructor args second
-                file_secret_settings, # any secret files third
+                lambda _: os.environ,  # <-- use os.environ explicitly
+                init_settings,
+                file_secret_settings,
             )
 
-# Singleton pattern
+# Singleton to prevent multiple initializations
 _settings: Settings | None = None
 
 def get_settings() -> Settings:
@@ -210,4 +212,3 @@ def get_settings() -> Settings:
         print("SMTP_PORT:", _settings.smtp_port)
         print("BREVO_API_KEY:", _settings.brevo_api_key)
     return _settings
-
