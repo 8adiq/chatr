@@ -141,7 +141,7 @@ class Settings(BaseSettings):
         return int(v)
 
     class Config:
-        env_file = ".env"            # local dev fallback
+        env_file = None            # local dev fallback
         env_file_encoding = "utf-8"
         case_sensitive = True         # match env var names exactly
 
